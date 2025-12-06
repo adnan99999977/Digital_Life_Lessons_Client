@@ -69,6 +69,7 @@ const Navbar = () => {
               {user && (
                 <li className="hover:bg-blue-100 transition-colors rounded-md">
                   <NavLink to="/dashboard">Dashboard</NavLink>
+
                 </li>
               )}
             </ul>
