@@ -4,11 +4,13 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { AuthContext } from "../auth/AuthContext";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import axiosApi from "../api/axiosInstansce";
 
 const Login = () => {
-  const { signInViaGoogle } = useContext(AuthContext);
+  const { signInViaGoogle, signInUser } = useContext(AuthContext);
   const [showPass, setShowPass] = useState(false);
-  // react hook form 
+    const [message, setMessage] = useState("");
+  // react hook form
   const {
     register,
     handleSubmit,
@@ -17,11 +19,51 @@ const Login = () => {
   } = useForm();
 
   // google log in
-  const handleGoogle = () => {
-    signInViaGoogle();
-  };
+   const handleGoogle = async () => {
+  try {
+    const result = await signInViaGoogle();
+    const user = result.user;
 
-  const handleLogIn = () => {};
+    const googleUserData = {
+      userName: user.displayName || "No Name",
+      email: user.email,
+      userImage: user.photoURL,
+      role: "user",
+      plan: "Free",
+      isPremium: false,
+      favorites: [],
+      lessonsCreated: [],
+      provider: "google",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const res = await axiosApi.post("/users/google", googleUserData);
+
+    console.log("✅ Google user DB response:", res.data);
+    alert("Google login successful!");
+  } catch (error) {
+    console.error("❌ Google login failed:", error.response?.data || error);
+  }
+};
+
+  const handleLogIn = async (data) => {
+    try {
+      const response = await axiosApi.post("/login", {
+        email: data.email,
+        password: data.password,
+      });
+
+      setMessage(response.data.message);
+      console.log("User data:", response.data.user);
+
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      setMessage(err.response?.data?.message || "Login failed");
+    }
+    signInUser(data.email,data.password)
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-base-200 px-3">
@@ -70,49 +112,50 @@ const Login = () => {
           </label>
 
           {/* Password */}
-         <div>
-           <label className="form-control w-full mb-3 relative">
-            <div className="label">
-              <span className="label-text font-medium">Password</span>
-            </div>
+          <div>
+            <label className="form-control w-full mb-3 relative">
+              <div className="label">
+                <span className="label-text font-medium">Password</span>
+              </div>
 
-            <input
-              {...register("password", {
-                required: "Password is required",
-                minLength: { value: 8, message: "Minimum 8 characters" },
-                maxLength: { value: 30, message: "Maximum 30 characters" },
-                pattern: {
-                  value:
-                    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/,
-                  message:
-                    "Password must contain uppercase, lowercase, number and special character",
-                },
-              })}
-              type={showPass ? "text" : "password"}
-              placeholder="••••••••"
-              className="border border-gray-300 p-2 rounded-md w-full pr-12"
-            />
-            {errors.password && (
-              <p className="text-red-400">{errors.password.message}</p>
-            )}
-
-            {/* Eye Icon  */}
-            <div
-              className="absolute right-3 top-[44px] -translate-y-1/2 cursor-pointer"
-              onClick={() => setShowPass(!showPass)}
-            >
-              {showPass ? (
-                <AiOutlineEyeInvisible size={22} />
-              ) : (
-                <AiOutlineEye size={22} />
+              <input
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: { value: 8, message: "Minimum 8 characters" },
+                  maxLength: { value: 30, message: "Maximum 30 characters" },
+                  pattern: {
+                    value:
+                      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/,
+                    message:
+                      "Password must contain uppercase, lowercase, number and special character",
+                  },
+                })}
+                type={showPass ? "text" : "password"}
+                placeholder="••••••••"
+                className="border border-gray-300 p-2 rounded-md w-full pr-12"
+              />
+              {errors.password && (
+                <p className="text-red-400">{errors.password.message}</p>
               )}
-            </div>
-          </label>
-         </div>
-        {/* Login Button */}
-        <button type="submit" className="btn btn-info w-full mt-2">Login</button>
-        </form>
 
+              {/* Eye Icon  */}
+              <div
+                className="absolute right-3 top-[44px] -translate-y-1/2 cursor-pointer"
+                onClick={() => setShowPass(!showPass)}
+              >
+                {showPass ? (
+                  <AiOutlineEyeInvisible size={22} />
+                ) : (
+                  <AiOutlineEye size={22} />
+                )}
+              </div>
+            </label>
+          </div>
+          {/* Login Button */}
+          <button type="submit" className="btn btn-info w-full mt-2">
+            Login
+          </button>
+        </form>
 
         <p className="mt-4 text-center text-sm text-base-content/70">
           Don't have an account?{" "}

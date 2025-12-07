@@ -57,11 +57,12 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  // Update Profile
-  const updateUser = (photoURL) => {
-    if (!auth.currentUser) return Promise.reject("No user logged in");
-    return updateProfile(auth.currentUser, { photoURL });
-  };
+ // Update Profile
+const updateUser = (user, profile) => {
+  if (!user) return Promise.reject("No user logged in");
+  return updateProfile(user, profile);
+};
+
 
   //  Auth State
   useEffect(() => {
@@ -75,6 +76,7 @@ const AuthProvider = ({ children }) => {
 
   const authInfo = {
     user,
+    setUser,
     loading,
     signInViaGoogle,
     signInUser,
