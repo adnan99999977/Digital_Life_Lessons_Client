@@ -21,12 +21,12 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  console.log(user);
 
   const handleLogout = () => {
     logOut();
     setDropdownOpen(false);
   };
-
   return (
     <div className="fixed bg-transparent  backdrop-blur-md top-0 left-0 w-full z-50 shadow-lg">
       <div className="navbar md:px-8  px-3 py-2 transition-all duration-300 ease-in-out">
@@ -63,13 +63,37 @@ const Navbar = () => {
               <li className="hover:bg-blue-100 transition-colors rounded-md">
                 <NavLink to="/">Home</NavLink>
               </li>
-              <li className="hover:bg-blue-100 transition-colors rounded-md">
-                <NavLink to="/public-lessons">Public Lessons</NavLink>
+              <li className="group">
+                <NavLink
+                  to="/public-lessons"
+                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
+                >
+                  Public-Lessons
+                </NavLink>
               </li>
-              {user && (
+              <li className="group">
+                <NavLink
+                  to="/dashboard/add-lesson"
+                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
+                >
+                  Add-Lesson
+                </NavLink>
+              </li>
+              <li className="group">
+                <NavLink
+                  to="/dashboard/my-lessons"
+                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
+                >
+                  My-Lessons
+                </NavLink>
+              </li>
+              {user?.displayName === "Admin" ? (
+                <li className="hover:bg-blue-100 transition-colors rounded-md">
+                  <NavLink to="/admin-dashboard">Admin Dashboard</NavLink>
+                </li>
+              ) : (
                 <li className="hover:bg-blue-100 transition-colors rounded-md">
                   <NavLink to="/dashboard">Dashboard</NavLink>
-
                 </li>
               )}
             </ul>
@@ -95,17 +119,32 @@ const Navbar = () => {
                 to="/public-lessons"
                 className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
               >
-                Public Lessons
+                Public-Lessons
               </NavLink>
             </li>
-            {user && (
-              <li className="group">
-                <NavLink
-                  to="/dashboard"
-                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-                >
-                  Dashboard
-                </NavLink>
+            <li className="group">
+              <NavLink
+                to="/dashboard/add-lesson"
+                className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
+              >
+                Add-Lesson
+              </NavLink>
+            </li>
+            <li className="group">
+              <NavLink
+                to="/dashboard/my-lessons"
+                className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
+              >
+                My-Lessons
+              </NavLink>
+            </li>
+            {user?.displayName === "Admin" ? (
+              <li className="hover:bg-blue-100 transition-colors rounded-md">
+                <NavLink to="/admin-dashboard">Admin Dashboard</NavLink>
+              </li>
+            ) : (
+              <li className="hover:bg-blue-100 transition-colors rounded-md">
+                <NavLink to="/dashboard">Dashboard</NavLink>
               </li>
             )}
           </ul>

@@ -6,39 +6,73 @@ import PublicLessons from "../pages/PublicLessons";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ErrorPage from "../components/shared/ErroPage";
-import DashboardHome from "../AdminDashboardComponents/DashboardHome";
 import Profile from "../pages/clientDashboradPages/Profile";
 import AddLesson from "../pages/clientDashboradPages/AddLesson";
 import MyLessons from "../pages/clientDashboradPages/MyLessons";
 import Pricing from "../pages/clientDashboradPages/Pricing";
-
+import DashboardHome from "../pages/clientDashboradPages/DashboardHome";
+import PrivateRoute from "./PrivetRoute";
+import AdminDashboardLayout from "../layouts/AdminDashboardLayout";
+import AdminDashboardHome from "../pages/adminDashboardPages/adminDashboardHome";
+import ManageUsers from "../pages/adminDashboardPages/ManageUsers.jsx";
+import ManageLessons from "../pages/adminDashboardPages/ManageLessons.jsx";
+import ReportedLessons from "../pages/adminDashboardPages/ReportedLessons.jsx";
+import AdminProfile from "../pages/adminDashboardPages/AdminProfile.jsx";
 
 const router = createBrowserRouter([
   // root layout
   {
     path: "/",
     element: <RootLayout />,
-    errorElement:<ErrorPage/>,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Home /> },
       { path: "public-lessons", element: <PublicLessons /> },
       { path: "log-in", element: <Login /> },
       { path: "register", element: <Register /> },
-     
     ],
   },
 
-   // dashboard layout
+  // dashboard layout
   {
     path: "dashboard",
     element: <DashboardLayout />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <DashboardHome /> }, 
+      { index: true, element: <DashboardHome /> },
       { path: "profile", element: <Profile /> },
-      { path: "add-lesson", element: <AddLesson /> },
-      { path: "my-lessons", element: <MyLessons /> },
+      {
+        path: "add-lesson",
+        element: (
+          <PrivateRoute>
+            <AddLesson />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "my-lessons",
+        element: (
+          <PrivateRoute>
+            <MyLessons />
+          </PrivateRoute>
+        ),
+      },
       { path: "pricing", element: <Pricing /> },
+    ],
+  },
+
+  //admin dashboard layout
+  {
+    path: "admin-dashboard",
+    element: <AdminDashboardLayout/>,
+    errorElement: <ErrorPage />,
+    children: [
+      { index: true, element: <AdminDashboardHome/> },
+      { path: 'manage-users', element: <ManageUsers/> },
+      { path: 'manage-lessons', element: <ManageLessons/> },
+      { path: 'reported-lessons', element: <ReportedLessons/> },
+      { path: 'admin-profile', element: <AdminProfile/> },
+      
     ],
   },
 ]);
