@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { Lock } from "lucide-react";
-import { useContext, useState } from "react";
+import { Lock, Star } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../auth/AuthContext";
 import { useForm } from "react-hook-form";
 import axiosApi from "../../api/axiosInstansce";
@@ -17,12 +17,10 @@ const AddLesson = () => {
   const [imageURL, setImageURL] = useState();
   const [isUploading, setIsUploading] = useState(false);
   const [fileName, setFileName] = useState("Choose a image");
-  const isPremium = user?.isPremium;
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const [newUser, setNewUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  const { register, handleSubmit, formState: { errors } } = useForm();
   const queryClient = useQueryClient();
 
   const addLessonMutation = useMutation({
@@ -88,6 +86,34 @@ const AddLesson = () => {
     addLessonMutation.mutate(lessonData);
   };
 
+   // Fetch user data from backend
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoadingUser(true);
+        const res = await axiosApi.get(`/users?email=${email}`);
+        setNewUser(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchUser();
+  }, [email]);
+
+  if (loadingUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-500 font-semibold text-xl">
+        Loading user data...
+      </div>
+    );
+  }
+
+ const isPremium = !!newUser?.isPremium;
+
+
+
   return (
     <motion.div
       initial="hidden"
@@ -106,7 +132,7 @@ const AddLesson = () => {
           </p>
         </motion.div>
 
-        {/* Glass Card Form */}
+        {/* Form */}
         <motion.div
           variants={fadeUp}
           className="backdrop-blur-xl bg-white/60 border border-white/30 shadow-2xl rounded-3xl p-10 md:p-12 hover:shadow-3xl transition-shadow duration-300"
@@ -119,9 +145,7 @@ const AddLesson = () => {
               </label>
               <input
                 type="text"
-                {...register("title", {
-                  required: "Lesson title is required",
-                })}
+                {...register("title", { required: "Lesson title is required" })}
                 placeholder="The hard truth I learned too late..."
                 className="w-full rounded-2xl border border-gray-200 p-4 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm hover:shadow-md transition"
               />
@@ -136,9 +160,7 @@ const AddLesson = () => {
                 Your Story <span className="text-red-600">*</span>
               </label>
               <textarea
-                {...register("description", {
-                  required: "Description is required",
-                })}
+                {...register("description", { required: "Description is required" })}
                 placeholder="Write honestly. This is where the magic happens..."
                 className="w-full rounded-2xl border border-gray-200 p-4 min-h-[180px] focus:ring-2 focus:ring-indigo-500 outline-none resize-none shadow-sm hover:shadow-md transition"
               />
@@ -199,6 +221,7 @@ const AddLesson = () => {
                 onClick={() => document.getElementById("lessonImage").click()}
               >
                 <span className="text-gray-700 truncate">{fileName}</span>
+                {isUploading && <span className="text-gray-500">Uploading...</span>}
               </div>
             </div>
 
@@ -222,6 +245,7 @@ const AddLesson = () => {
                 <label className="block font-semibold mb-2 text-gray-700 text-lg flex items-center gap-2">
                   Access Level
                   {!isPremium && <Lock size={16} className="text-red-500" />}
+                  {isPremium && <Star size={16} className="text-yellow-400" />}
                 </label>
                 <select
                   {...register("accessLevel")}

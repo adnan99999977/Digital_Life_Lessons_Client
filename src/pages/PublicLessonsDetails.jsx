@@ -32,7 +32,7 @@ const similarLessons = [
 ];
 
 const PublicLessonsDetails = () => {
-  const currentUser = { isPremium: false }; 
+  const currentUser = { isPremium: true }; 
   const isLocked = lesson.accessLevel === "Premium" && !currentUser.isPremium;
 
   return (

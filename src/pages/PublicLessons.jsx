@@ -1,111 +1,142 @@
 import React from "react";
+import axiosApi from "../api/axiosInstansce";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-const lessons = [
-  {
-    id: 1,
-    title: "Overcoming Fear",
-    description: "Learn how to overcome fear and achieve your goals.",
-    category: "Motivation",
-    tone: "Inspirational",
-    creator: { name: "John Doe", photo: "/default-avatar.png" },
-    accessLevel: "Public",
-    createdAt: "2025-12-01",
-  },
-  {
-    id: 2,
-    title: "Mindfulness Basics",
-    description: "Discover the power of mindfulness for everyday life.",
-    category: "Wellness",
-    tone: "Calm",
-    creator: { name: "Alice", photo: "/default-avatar.png" },
-    accessLevel: "Premium",
-    createdAt: "2025-12-02",
-  },
-  {
-    id: 3,
-    title: "Time Management Tips",
-    description: "Simple tips to manage your time effectively.",
-    category: "Productivity",
-    tone: "Practical",
-    creator: { name: "Bob", photo: "/default-avatar.png" },
-    accessLevel: "Public",
-    createdAt: "2025-12-03",
-  },
-];
+const getLessonsData = async () => {
+  const res = await axiosApi.get("/lessons");
+  return res.data;
+};
 
 const PublicLessons = () => {
-  const currentUser = { isPremium: false }; // example: current user is not premium
+  const currentUser = { isPremium: false }; // Replace with real auth context
+
+  const {
+    data: lessons,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["lessons"],
+    queryFn: getLessonsData,
+  });
+
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-500 font-semibold text-xl">
+        Loading lessons...
+      </div>
+    );
+
+  if (isError)
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500 font-semibold text-xl">
+        Error loading lessons
+      </div>
+    );
 
   return (
-    <div className="max-w-7xl mx-auto p-6 grid gap-8 md:grid-cols-3">
-      {lessons.map((lesson) => {
-        const isLocked =
-          lesson.accessLevel === "Premium" && !currentUser.isPremium;
-        return (
-          <div
-            key={lesson.id}
-            className={`relative bg-white/70 backdrop-blur-md shadow-lg rounded-2xl p-6 flex flex-col justify-between transition-transform hover:scale-105 hover:shadow-2xl border border-gray-200`}
-          >
-            {/* Locked overlay */}
-            {isLocked && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl">
-                <span className="text-4xl animate-pulse">🔒</span>
-                <p className="mt-2 font-semibold text-gray-700 text-center text-sm">
-                  Premium Lesson – Upgrade to view
-                </p>
-              </div>
-            )}
+    <div className="px-6 py-12 max-w-7xl mx-auto">
+      <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-12 text-center">
+        Explore Life Lessons
+      </h1>
 
-            {/* Lesson Content */}
-            <div className="space-y-3">
-              <h2 className="text-2xl font-bold text-gray-900 hover:text-indigo-600 transition-colors">
-                {lesson.title}
-              </h2>
-              <p className="text-gray-600 text-sm line-clamp-3">
-                {lesson.description}
-              </p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-xs font-medium bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
-                  {lesson.category}
-                </span>
-                <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                  {lesson.tone}
-                </span>
-              </div>
-            </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        {lessons.map((lesson) => {
+          const isLocked =
+            lesson.accessLevel === "Premium" && !currentUser.isPremium;
 
-            {/* Creator & Date */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src={lesson.creator.photo}
-                  alt={lesson.creator.name}
-                  className="w-9 h-9 rounded-full object-cover border border-gray-200"
-                />
-                <span className="text-sm font-medium text-gray-800">
-                  {lesson.creator.name}
-                </span>
-              </div>
-              <span className="text-xs text-gray-400">
-                {new Date(lesson.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-
-            {/* CTA Button */}
-            <Link
-              to={"/public-lessons-details"}
-              className={`mt-5 w-full py-3 rounded-xl font-semibold text-center text-white transition-colors ${
-                isLocked
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+          return (
+            <div
+              key={lesson._id}
+              className={`relative flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 ${
+                isLocked ? "filter blur-sm brightness-90" : ""
               }`}
             >
-              {isLocked ? "Locked" : "See Details"}
-            </Link>
-          </div>
-        );
-      })}
+              {/* Lesson Image */}
+              <div className="w-full h-44 overflow-hidden">
+                {lesson.userImage ? (
+                  <img
+                    src={lesson.userImage}
+                    alt="lesson image"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 font-semibold">
+                    No Image
+                  </div>
+                )}
+              </div>
+
+              {/* Content Section */}
+              <div className="flex-1 p-5 flex flex-col justify-between">
+                <div>
+                  <h2
+                    className={`font-semibold text-lg text-gray-800 mb-2 cursor-pointer hover:text-blue-600 ${
+                      isLocked ? "cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {lesson.title}
+                  </h2>
+                  <p className="text-gray-500 text-sm mb-3">
+                    {lesson.description.slice(0, 100)}...
+                  </p>
+                </div>
+
+                {/* Metadata */}
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                    {lesson.category}
+                  </span>
+                  {lesson.accessLevel === "Premium" && (
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold">
+                      Premium ⭐
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer Section */}
+              <div className="p-5 border-t border-gray-100 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={lesson.creatorPhotoURL || "/default-avatar.png"}
+                      alt={lesson.creatorName}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                    <span className="text-gray-600 text-sm">
+                      {lesson.creatorName}
+                    </span>
+                  </div>
+                  <span className="text-gray-400 text-xs">
+                    {new Date(lesson.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
+                <Link to={"/public-lessons-details"}>
+                  <button
+                    className={`w-full py-2 rounded-xl font-semibold transition-colors ${
+                      isLocked
+                        ? "bg-yellow-500 text-white cursor-not-allowed"
+                        : "bg-blue-500 text-white hover:bg-blue-600"
+                    }`}
+                    disabled={isLocked}
+                  >
+                    {isLocked ? "Upgrade to Premium" : "See Details"}
+                  </button>
+                </Link>
+              </div>
+
+              {/* Lock Overlay */}
+              {isLocked && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white font-bold text-sm rounded-2xl pointer-events-none">
+                  Premium Lesson 🔒
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
