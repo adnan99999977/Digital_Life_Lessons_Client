@@ -2,6 +2,7 @@ import React from "react";
 import axiosApi from "../api/axiosInstansce";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { Lock } from "lucide-react";
 
 const getLessonsData = async () => {
   const res = await axiosApi.get("/lessons");
@@ -48,12 +49,14 @@ const PublicLessons = () => {
           return (
             <div
               key={lesson._id}
-              className={`relative flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 ${
-                isLocked ? "filter blur-sm brightness-90" : ""
-              }`}
+              className="relative flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300"
             >
               {/* Lesson Image */}
-              <div className="w-full h-44 overflow-hidden">
+              <div
+                className={`w-full h-44 overflow-hidden ${
+                  isLocked ? "filter blur-sm brightness-75" : ""
+                }`}
+              >
                 {lesson.userImage ? (
                   <img
                     src={lesson.userImage}
@@ -68,16 +71,20 @@ const PublicLessons = () => {
               </div>
 
               {/* Content Section */}
-              <div className="flex-1 p-5 flex flex-col justify-between">
+              <div className="flex-1  p-5 flex flex-col justify-between">
                 <div>
                   <h2
-                    className={`font-semibold text-lg text-gray-800 mb-2 cursor-pointer hover:text-blue-600 ${
-                      isLocked ? "cursor-not-allowed" : ""
+                    className={`font-semibold text-lg text-gray-800 mb-2 cursor-pointer  hover:text-blue-600 ${
+                      isLocked ? "cursor-not-allowed blur-sm brightness-75" : ""
                     }`}
                   >
                     {lesson.title}
                   </h2>
-                  <p className="text-gray-500 text-sm mb-3">
+                  <p
+                    className={`text-gray-500 text-sm mb-3 ${
+                      isLocked ? "blur-sm brightness-75" : ""
+                    }`}
+                  >
                     {lesson.description.slice(0, 100)}...
                   </p>
                 </div>
@@ -88,8 +95,8 @@ const PublicLessons = () => {
                     {lesson.category}
                   </span>
                   {lesson.accessLevel === "Premium" && (
-                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold">
-                      Premium ⭐
+                    <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-semibold flex items-center gap-1">
+                      <Lock size={14} /> Premium
                     </span>
                   )}
                 </div>
@@ -113,24 +120,29 @@ const PublicLessons = () => {
                   </span>
                 </div>
 
-                <Link to={"/public-lessons-details"}>
-                  <button
-                    className={`w-full py-2 rounded-xl font-semibold transition-colors ${
-                      isLocked
-                        ? "bg-yellow-500 text-white cursor-not-allowed"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
-                    }`}
-                    disabled={isLocked}
-                  >
-                    {isLocked ? "Upgrade to Premium" : "See Details"}
-                  </button>
-                </Link>
+                {isLocked ? (
+                  <Link to="/dashboard/pricing">
+                    <button className="w-full py-2 rounded-xl font-semibold bg-yellow-500 text-white hover:bg-yellow-600 transition-colors">
+                       Upgrade to Premium
+                    </button>
+                  </Link>
+                ) : (
+                  <Link to={`/public-lessons-details/${lesson._id}`}>
+                    <button className="w-full py-2 rounded-xl font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+                      See Details
+                    </button>
+                  </Link>
+                )}
               </div>
 
-              {/* Lock Overlay */}
+              {/* Lock Overlay for Professional Look */}
               {isLocked && (
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center text-white font-bold text-sm rounded-2xl pointer-events-none">
-                  Premium Lesson 🔒
+                <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center text-black font-bold text-center rounded-2xl pointer-events-none p-4">
+                  <Lock size={28} className="mb-2" />
+                  <p className="text-sm ">This lesson is Premium</p>
+                  <p className="text-xs mt-1 ">
+                    Upgrade your account to access it.
+                  </p>
                 </div>
               )}
             </div>
