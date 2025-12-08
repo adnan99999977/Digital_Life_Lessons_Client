@@ -9,7 +9,9 @@ import ErrorPage from "../components/shared/ErroPage";
 import Profile from "../pages/clientDashboradPages/Profile";
 import AddLesson from "../pages/clientDashboradPages/AddLesson";
 import MyLessons from "../pages/clientDashboradPages/MyLessons";
+
 import Pricing from "../pages/clientDashboradPages/Pricing";
+
 import DashboardHome from "../pages/clientDashboradPages/DashboardHome";
 import PrivateRoute from "./PrivetRoute";
 import AdminDashboardLayout from "../layouts/AdminDashboardLayout";
@@ -19,6 +21,8 @@ import ManageLessons from "../pages/adminDashboardPages/ManageLessons.jsx";
 import ReportedLessons from "../pages/adminDashboardPages/ReportedLessons.jsx";
 import AdminProfile from "../pages/adminDashboardPages/AdminProfile.jsx";
 import PublicLessonsDetails from "../pages/PublicLessonsDetails.jsx";
+import Payment from "../pages/clientDashboradPages/Payment.jsx";
+import PaymentCancel from "../pages/clientDashboradPages/PaymentCancel.jsx";
 
 const router = createBrowserRouter([
   // root layout
@@ -64,6 +68,8 @@ const router = createBrowserRouter([
         ),
       },
       { path: "pricing", element: <Pricing /> },
+      { path: "paymentSuccess", element: <Payment /> },
+      { path: "paymentCancel", element: <PaymentCancel /> },
     ],
   },
 

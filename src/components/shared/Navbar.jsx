@@ -21,15 +21,32 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  console.log(user);
 
   const handleLogout = () => {
     logOut();
     setDropdownOpen(false);
   };
+
+  // NavLink config
+  const commonNavItems = [
+    { name: "Home", path: "/" },
+    { name: "Public Lessons", path: "/public-lessons" },
+  ];
+
+  const roleNavItems = {
+    admin: [{ name: "Admin Dashboard", path: "/admin-dashboard" }],
+    user: [
+      { name: "Dashboard", path: "/dashboard" },
+      { name: "Add Lesson", path: "/dashboard/add-lesson" },
+      { name: "My Lessons", path: "/dashboard/my-lessons" },
+    ],
+  };
+
+  const currentRole = user?.displayName === "AdnanAdmin" ? "admin" : "user";
+
   return (
-    <div className="fixed bg-transparent  backdrop-blur-md top-0 left-0 w-full z-50 shadow-lg">
-      <div className="navbar md:px-8  px-3 py-2 transition-all duration-300 ease-in-out">
+    <div className="fixed bg-transparent backdrop-blur-md top-0 left-0 w-full z-50 shadow-lg">
+      <div className="navbar md:px-8 px-3 py-2 transition-all duration-300 ease-in-out">
         {/* LEFT */}
         <div className="navbar-start flex items-center gap-2">
           {/* Mobile Menu */}
@@ -60,42 +77,22 @@ const Navbar = () => {
               tabIndex={0}
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[999] mt-3 w-52 p-2 shadow-lg animate-slide-down"
             >
-              <li className="hover:bg-blue-100 transition-colors rounded-md">
-                <NavLink to="/">Home</NavLink>
-              </li>
-              <li className="group">
-                <NavLink
-                  to="/public-lessons"
-                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
+              {commonNavItems.map((item) => (
+                <li
+                  key={item.name}
+                  className="hover:bg-blue-100 transition-colors rounded-md"
                 >
-                  Public-Lessons
-                </NavLink>
-              </li>
-              <li className="group">
-                <NavLink
-                  to="/dashboard/add-lesson"
-                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-                >
-                  Add-Lesson
-                </NavLink>
-              </li>
-              <li className="group">
-                <NavLink
-                  to="/dashboard/my-lessons"
-                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-                >
-                  My-Lessons
-                </NavLink>
-              </li>
-              {user?.displayName === "Admin" ? (
-                <li className="hover:bg-blue-100 transition-colors rounded-md">
-                  <NavLink to="/admin-dashboard">Admin Dashboard</NavLink>
+                  <NavLink to={item.path}>{item.name}</NavLink>
                 </li>
-              ) : (
-                <li className="hover:bg-blue-100 transition-colors rounded-md">
-                  <NavLink to="/dashboard">Dashboard</NavLink>
+              ))}
+              {roleNavItems[currentRole].map((item) => (
+                <li
+                  key={item.name}
+                  className="hover:bg-blue-100 transition-colors rounded-md"
+                >
+                  <NavLink to={item.path}>{item.name}</NavLink>
                 </li>
-              )}
+              ))}
             </ul>
           </div>
 
@@ -106,63 +103,26 @@ const Navbar = () => {
         {/* CENTER */}
         <div className="navbar-center hidden lg:flex">
           <ul className="flex gap-6">
-            <li className="group">
-              <NavLink
-                to="/"
-                className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-              >
-                Home
-              </NavLink>
-            </li>
-            <li className="group">
-              <NavLink
-                to="/public-lessons"
-                className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-              >
-                Public-Lessons
-              </NavLink>
-            </li>
-            <li className="group">
-              <NavLink
-                to="/dashboard/add-lesson"
-                className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-              >
-                Add-Lesson
-              </NavLink>
-            </li>
-            <li className="group">
-              <NavLink
-                to="/dashboard/my-lessons"
-                className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-              >
-                My-Lessons
-              </NavLink>
-            </li>
-            {user?.displayName === "Admin" ? (
-              <li>
-                <Link
-                  to="/admin-dashboard"
-                  className="relative text-gray-800  transition-colors duration-300
-           before:content-[''] before:absolute before:-bottom-1 before:left-0 
-           before:w-0 before:h-[2px] before:bg-blue-600 before:transition-all 
-           before:duration-300 hover:text-blue-600 hover:before:w-full"
+            {commonNavItems.map((item) => (
+              <li key={item.name} className="group">
+                <NavLink
+                  to={item.path}
+                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
                 >
-                  Admin Dashboard
-                </Link>
+                  {item.name}
+                </NavLink>
               </li>
-            ) : (
-              <li>
-                <Link
-                  to="/dashboard"
-                  className="relative text-gray-800  transition-colors duration-300
-           before:content-[''] before:absolute before:-bottom-1 before:left-0 
-           before:w-0 before:h-[2px] before:bg-blue-600 before:transition-all 
-           before:duration-300 hover:text-blue-600 hover:before:w-full"
+            ))}
+            {roleNavItems[currentRole].map((item) => (
+              <li key={item.name} className="group">
+                <NavLink
+                  to={item.path}
+                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
                 >
-                  Dashboard
-                </Link>
+                  {item.name}
+                </NavLink>
               </li>
-            )}
+            ))}
           </ul>
         </div>
 

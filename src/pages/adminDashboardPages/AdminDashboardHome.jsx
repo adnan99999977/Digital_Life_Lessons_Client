@@ -13,7 +13,6 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const AdminDashboardHome = () => {
-  // Dummy data for charts
   const lessonGrowthData = {
     labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
     datasets: [
@@ -21,8 +20,8 @@ const AdminDashboardHome = () => {
         label: "Lessons Created",
         data: [12, 19, 10, 15, 22, 30, 18],
         fill: true,
-        backgroundColor: "rgba(59, 130, 246, 0.2)", // blue-500 / 20%
-        borderColor: "rgba(59, 130, 246, 1)", // blue-500
+        backgroundColor: "rgba(99, 102, 241, 0.2)", // indigo-500 / 20%
+        borderColor: "rgba(99, 102, 241, 1)", // indigo-500
         tension: 0.3,
       },
     ],
@@ -42,83 +41,57 @@ const AdminDashboardHome = () => {
     ],
   };
 
+  const cards = [
+    { icon: <UserIcon className="w-10 h-10 text-blue-500" />, title: "Total Users", value: "1,245" },
+    { icon: <BookOpenIcon className="w-10 h-10 text-green-500" />, title: "Total Public Lessons", value: "3,456" },
+    { icon: <FlagIcon className="w-10 h-10 text-red-500" />, title: "Reported Lessons", value: "78" },
+    { icon: <StarIcon className="w-10 h-10 text-yellow-500" />, title: "Top Contributors", value: "12" },
+    { icon: <CalendarIcon className="w-10 h-10 text-purple-500" />, title: "New Lessons Today", value: "24" },
+  ];
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="p-6 bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+      <motion.h1
+        className="text-3xl md:text-4xl font-bold mb-8 text-indigo-700 text-center"
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        Admin Dashboard
+      </motion.h1>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-lg shadow p-5 flex items-center gap-4"
-        >
-          <UserIcon className="w-10 h-10 text-blue-500" />
-          <div>
-            <p className="text-gray-500">Total Users</p>
-            <p className="text-xl font-semibold">1,245</p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-lg shadow p-5 flex items-center gap-4"
-        >
-          <BookOpenIcon className="w-10 h-10 text-green-500" />
-          <div>
-            <p className="text-gray-500">Total Public Lessons</p>
-            <p className="text-xl font-semibold">3,456</p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-lg shadow p-5 flex items-center gap-4"
-        >
-          <FlagIcon className="w-10 h-10 text-red-500" />
-          <div>
-            <p className="text-gray-500">Reported Lessons</p>
-            <p className="text-xl font-semibold">78</p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-lg shadow p-5 flex items-center gap-4"
-        >
-          <StarIcon className="w-10 h-10 text-yellow-500" />
-          <div>
-            <p className="text-gray-500">Top Contributors</p>
-            <p className="text-xl font-semibold">12</p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-lg shadow p-5 flex items-center gap-4"
-        >
-          <CalendarIcon className="w-10 h-10 text-purple-500" />
-          <div>
-            <p className="text-gray-500">New Lessons Today</p>
-            <p className="text-xl font-semibold">24</p>
-          </div>
-        </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-10">
+        {cards.map((card, idx) => (
+          <motion.div
+            key={idx}
+            whileHover={{ scale: 1.05 }}
+            className="backdrop-blur-md bg-white/70 border border-white/30 shadow-lg rounded-2xl p-5 flex items-center gap-4 transition-shadow duration-300"
+          >
+            {card.icon}
+            <div>
+              <p className="text-gray-500">{card.title}</p>
+              <p className="text-xl md:text-2xl font-semibold text-gray-900">{card.value}</p>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
-      {/* Charts Section */}
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-white rounded-lg shadow p-6"
+          className="backdrop-blur-md bg-white/80 border border-white/30 shadow-lg rounded-2xl p-6 transition-shadow duration-300"
         >
-          <h2 className="text-xl font-semibold mb-4">Lesson Growth (This Week)</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Lesson Growth (This Week)</h2>
           <Line data={lessonGrowthData} />
         </motion.div>
 
         <motion.div
           whileHover={{ scale: 1.02 }}
-          className="bg-white rounded-lg shadow p-6"
+          className="backdrop-blur-md bg-white/80 border border-white/30 shadow-lg rounded-2xl p-6 transition-shadow duration-300"
         >
-          <h2 className="text-xl font-semibold mb-4">User Growth (Monthly)</h2>
+          <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">User Growth (Monthly)</h2>
           <Line data={userGrowthData} />
         </motion.div>
       </div>

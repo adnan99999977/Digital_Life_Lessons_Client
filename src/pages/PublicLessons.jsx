@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { Link } from "react-router-dom";
 
 const lessons = [
   {
@@ -38,51 +38,70 @@ const PublicLessons = () => {
   const currentUser = { isPremium: false }; // example: current user is not premium
 
   return (
-    <div className="max-w-6xl mx-auto p-6 grid gap-6 md:grid-cols-3">
+    <div className="max-w-7xl mx-auto p-6 grid gap-8 md:grid-cols-3">
       {lessons.map((lesson) => {
-        const isLocked = lesson.accessLevel === "Premium" && !currentUser.isPremium;
+        const isLocked =
+          lesson.accessLevel === "Premium" && !currentUser.isPremium;
         return (
           <div
             key={lesson.id}
-            className={`relative bg-white shadow-lg rounded-lg p-6 flex flex-col justify-between transition-transform hover:scale-105 ${
-              isLocked ? "filter blur-sm" : ""
-            }`}
+            className={`relative bg-white/70 backdrop-blur-md shadow-lg rounded-2xl p-6 flex flex-col justify-between transition-transform hover:scale-105 hover:shadow-2xl border border-gray-200`}
           >
+            {/* Locked overlay */}
             {isLocked && (
-              <div className="absolute inset-0 bg-white/70 flex flex-col items-center justify-center rounded-lg">
-                <span className="text-3xl">🔒</span>
-                <p className="mt-2 font-semibold text-gray-700 text-center">
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-2xl">
+                <span className="text-4xl animate-pulse">🔒</span>
+                <p className="mt-2 font-semibold text-gray-700 text-center text-sm">
                   Premium Lesson – Upgrade to view
                 </p>
               </div>
             )}
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold">{lesson.title}</h2>
-              <p className="text-gray-600 text-sm">{lesson.description}</p>
-              <p className="text-gray-500 text-xs">
-                Category: {lesson.category} | Tone: {lesson.tone}
+
+            {/* Lesson Content */}
+            <div className="space-y-3">
+              <h2 className="text-2xl font-bold text-gray-900 hover:text-indigo-600 transition-colors">
+                {lesson.title}
+              </h2>
+              <p className="text-gray-600 text-sm line-clamp-3">
+                {lesson.description}
               </p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-xs font-medium bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                  {lesson.category}
+                </span>
+                <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                  {lesson.tone}
+                </span>
+              </div>
             </div>
+
+            {/* Creator & Date */}
             <div className="flex items-center justify-between mt-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <img
                   src={lesson.creator.photo}
                   alt={lesson.creator.name}
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-9 h-9 rounded-full object-cover border border-gray-200"
                 />
-                <span className="text-sm font-medium">{lesson.creator.name}</span>
+                <span className="text-sm font-medium text-gray-800">
+                  {lesson.creator.name}
+                </span>
               </div>
-              <span className="text-xs text-gray-400">{lesson.createdAt}</span>
+              <span className="text-xs text-gray-400">
+                {new Date(lesson.createdAt).toLocaleDateString()}
+              </span>
             </div>
-            <Link to={'/public-lessons-details'}
-              className={`mt-4 w-full py-2 rounded-md font-semibold transition-colors ${
+
+            {/* CTA Button */}
+            <Link
+              to={"/public-lessons-details"}
+              className={`mt-5 w-full py-3 rounded-xl font-semibold text-center text-white transition-colors ${
                 isLocked
                   ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-600 text-white"
+                  : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
               }`}
-              disabled={isLocked}
             >
-              See Details
+              {isLocked ? "Locked" : "See Details"}
             </Link>
           </div>
         );

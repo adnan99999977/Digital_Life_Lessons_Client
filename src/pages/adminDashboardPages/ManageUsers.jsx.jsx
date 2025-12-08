@@ -27,42 +27,46 @@ const ManageUsers = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">Manage Users</h1>
+    <div className="max-w-7xl mx-auto p-6 space-y-8 bg-gray-50 min-h-screen">
+      <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">Manage Users</h1>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {users.map((user) => (
           <motion.div
             key={user.id}
-            className="bg-white shadow-lg rounded-xl p-6 flex flex-col justify-between hover:shadow-2xl transition-shadow"
+            className="relative overflow-hidden rounded-3xl p-6 flex flex-col justify-between bg-gradient-to-br from-white/80 to-white/50 backdrop-blur-xl border border-white/30 shadow-2xl hover:shadow-indigo-300/30 transition-all duration-500"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.05 }}
           >
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">{user.name}</h2>
-              <p className="text-gray-500">
-                Email: <span className="font-medium">{user.email}</span>
+            <div className="space-y-3">
+              <h2 className="text-2xl font-semibold text-gray-900">{user.name}</h2>
+              <p className="text-gray-600 text-sm">
+                Email: <span className="font-medium text-gray-800">{user.email}</span>
               </p>
-              <p className="text-gray-500">
+              <p className="text-gray-600 text-sm">
                 Role:{" "}
                 <span
-                  className={`font-medium px-2 py-1 rounded ${
-                    user.role === "Admin" ? "bg-yellow-400 text-white" : "bg-blue-400 text-white"
+                  className={`font-medium px-3 py-1 rounded-full text-sm ${
+                    user.role === "Admin"
+                      ? "bg-yellow-400 text-white shadow-md"
+                      : "bg-blue-400 text-white shadow-md"
                   }`}
                 >
                   {user.role}
                 </span>
               </p>
-              <p className="text-gray-500">
-                Total Lessons: <span className="font-medium">{user.lessons}</span>
+              <p className="text-gray-600 text-sm">
+                Total Lessons: <span className="font-medium text-gray-800">{user.lessons}</span>
               </p>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-3">
               <button
-                className={`px-4 py-2 rounded-lg text-white font-medium transition-colors ${
-                  user.role === "Admin" ? "bg-blue-500 hover:bg-blue-600" : "bg-yellow-500 hover:bg-yellow-600"
+                className={`px-5 py-2 rounded-2xl font-medium text-white transition-all duration-300 ${
+                  user.role === "Admin"
+                    ? "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-md"
+                    : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-md"
                 }`}
                 onClick={() => toggleRole(user.id)}
               >
@@ -70,12 +74,23 @@ const ManageUsers = () => {
               </button>
 
               <button
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
+                className="px-5 py-2 rounded-2xl bg-red-500 text-white hover:bg-red-600 transition-all duration-300 shadow-md font-medium"
                 onClick={() => deleteUser(user.id)}
               >
                 Delete
               </button>
             </div>
+
+            {/* subtle neon glow overlay */}
+            <motion.div
+              className="absolute inset-0 rounded-3xl pointer-events-none"
+              initial={{ opacity: 0 }}
+              whileHover={{ opacity: 0.05 }}
+              transition={{ duration: 0.4 }}
+              style={{
+                background: "radial-gradient(circle at top left, rgba(99,102,241,0.1), transparent 70%)",
+              }}
+            />
           </motion.div>
         ))}
       </div>
