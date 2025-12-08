@@ -74,21 +74,35 @@ const AdminDashboardLayout = () => {
                   to={"/"}
                   className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors duration-200"
                 >
-                  <HomeIcon className="h-6 w-6 text-blue-500" />
-                  <span>Back To Home</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="size-6"
+                    color="#2A7FFF"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"
+                    />
+                  </svg>
+                  <p>Back To Home</p>
                 </Link>
               </li>
 
               {/* Dashboard Home */}
               <li>
-                <NavLink
+                <Link
                   to="/admin-dashboard"
                   className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors duration-200"
                   onClick={() => setDrawerOpen(false)}
                 >
                   <HomeIcon className="h-6 w-6 text-blue-500" />
                   <span>Dashboard Home</span>
-                </NavLink>
+                </Link>
               </li>
 
               {/* Manage Users */}

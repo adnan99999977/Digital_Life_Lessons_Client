@@ -16,40 +16,38 @@ const Register = () => {
     watch,
     formState: { errors },
   } = useForm();
-
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const { setUser,updateUser, registerUser, signInViaGoogle } = useContext(AuthContext);
+  const { setUser, updateUser, registerUser, signInViaGoogle } =
+    useContext(AuthContext);
 
- const handleGoogle = async () => {
-  try {
-    const result = await signInViaGoogle();
-    const user = result.user;
+  const handleGoogle = async () => {
+    try {
+      const result = await signInViaGoogle();
+      const user = result.user;
 
-    const googleUserData = {
-      userName: user.displayName || "No Name",
-      email: user.email,
-      userImage: user.photoURL,
-      role: "user",
-      plan: "Free",
-      isPremium: false,
-      favorites: [],
-      lessonsCreated: [],
-      provider: "google",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      const googleUserData = {
+        userName: user.displayName || "No Name",
+        email: user.email,
+        userImage: user.photoURL,
+        role: "user",
+        plan: "Free",
+        isPremium: false,
+        favorites: [],
+        lessonsCreated: [],
+        provider: "google",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    const res = await axiosApi.post("/users/google", googleUserData);
+      const res = await axiosApi.post("/users/google", googleUserData);
 
-    console.log("✅ Google user DB response:", res.data);
-    alert("Google login successful!");
-  } catch (error) {
-    console.error("❌ Google login failed:", error.response?.data || error);
-  }
-};
-
-
+      console.log("✅ Google user DB response:", res.data);
+      alert("Google login successful!");
+    } catch (error) {
+      console.error("❌ Google login failed:", error.response?.data || error);
+    }
+  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -75,50 +73,52 @@ const Register = () => {
   };
 
   const handleRegister = async (data) => {
-  if (!imageURL) {
-    alert("Please upload a profile image first!");
-    return;
-  }
+    if (!imageURL) {
+      alert("Please upload a profile image first!");
+      return;
+    }
 
-  try {
-    const { confirmPassword, ...userData } = data;
+    try {
+      const { confirmPassword, ...userData } = data;
 
-    const registrationData = {
-      ...userData, 
-      userImage: imageURL,
-      role: "user",
-      plan: "Free",
-      isPremium: false,
-      favorites: [],
-      lessonsCreated: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      const registrationData = {
+        ...userData,
+        userImage: imageURL,
+        role: "user",
+        plan: "Free",
+        isPremium: false,
+        favorites: [],
+        lessonsCreated: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    // 3️⃣ Firebase register
-    const userCredential = await registerUser(userData.email, userData.password);
-    const currentUser = userCredential.user;
+      // 3️⃣ Firebase register
+      const userCredential = await registerUser(
+        userData.email,
+        userData.password
+      );
+      const currentUser = userCredential.user;
 
-    // 4️⃣ Firebase profile update
-    await updateUser(currentUser, {
-      displayName: userData.userName,
-      photoURL: imageURL,
-    });
-    setUser({
-      ...currentUser,
-      displayName: userData.userName,
-      photoURL: imageURL,
-    });
+      // 4️⃣ Firebase profile update
+      await updateUser(currentUser, {
+        displayName: userData.userName,
+        photoURL: imageURL,
+      });
+      setUser({
+        ...currentUser,
+        displayName: userData.userName,
+        photoURL: imageURL,
+      });
 
-    // 5️⃣ MongoDB post
-    await axiosApi.post("/users", registrationData);
+      // 5️⃣ MongoDB post
+      await axiosApi.post("/users", registrationData);
 
-    alert("Registration successful!");
-  } catch (err) {
-    console.error("Registration failed", err);
-  }
-};
-
+      alert("Registration successful!");
+    } catch (err) {
+      console.error("Registration failed", err);
+    }
+  };
 
   const password = watch("password");
 

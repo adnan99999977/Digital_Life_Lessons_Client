@@ -139,12 +139,28 @@ const Navbar = () => {
               </NavLink>
             </li>
             {user?.displayName === "Admin" ? (
-              <li className="hover:bg-blue-100 transition-colors rounded-md">
-                <NavLink to="/admin-dashboard">Admin Dashboard</NavLink>
+              <li>
+                <Link
+                  to="/admin-dashboard"
+                  className="relative text-gray-800  transition-colors duration-300
+           before:content-[''] before:absolute before:-bottom-1 before:left-0 
+           before:w-0 before:h-[2px] before:bg-blue-600 before:transition-all 
+           before:duration-300 hover:text-blue-600 hover:before:w-full"
+                >
+                  Admin Dashboard
+                </Link>
               </li>
             ) : (
-              <li className="hover:bg-blue-100 transition-colors rounded-md">
-                <NavLink to="/dashboard">Dashboard</NavLink>
+              <li>
+                <Link
+                  to="/dashboard"
+                  className="relative text-gray-800  transition-colors duration-300
+           before:content-[''] before:absolute before:-bottom-1 before:left-0 
+           before:w-0 before:h-[2px] before:bg-blue-600 before:transition-all 
+           before:duration-300 hover:text-blue-600 hover:before:w-full"
+                >
+                  Dashboard
+                </Link>
               </li>
             )}
           </ul>

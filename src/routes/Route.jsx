@@ -18,6 +18,7 @@ import ManageUsers from "../pages/adminDashboardPages/ManageUsers.jsx";
 import ManageLessons from "../pages/adminDashboardPages/ManageLessons.jsx";
 import ReportedLessons from "../pages/adminDashboardPages/ReportedLessons.jsx";
 import AdminProfile from "../pages/adminDashboardPages/AdminProfile.jsx";
+import PublicLessonsDetails from "../pages/PublicLessonsDetails.jsx";
 
 const router = createBrowserRouter([
   // root layout
@@ -30,13 +31,18 @@ const router = createBrowserRouter([
       { path: "public-lessons", element: <PublicLessons /> },
       { path: "log-in", element: <Login /> },
       { path: "register", element: <Register /> },
+      { path: "public-lessons-details", element: <PublicLessonsDetails /> },
     ],
   },
 
   // dashboard layout
   {
     path: "dashboard",
-    element: <DashboardLayout />,
+    element: (
+      <PrivateRoute>
+        <DashboardLayout />
+      </PrivateRoute>
+    ),
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <DashboardHome /> },
@@ -64,15 +70,14 @@ const router = createBrowserRouter([
   //admin dashboard layout
   {
     path: "admin-dashboard",
-    element: <AdminDashboardLayout/>,
+    element: <AdminDashboardLayout />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <AdminDashboardHome/> },
-      { path: 'manage-users', element: <ManageUsers/> },
-      { path: 'manage-lessons', element: <ManageLessons/> },
-      { path: 'reported-lessons', element: <ReportedLessons/> },
-      { path: 'admin-profile', element: <AdminProfile/> },
-      
+      { index: true, element: <AdminDashboardHome /> },
+      { path: "manage-users", element: <ManageUsers /> },
+      { path: "manage-lessons", element: <ManageLessons /> },
+      { path: "reported-lessons", element: <ReportedLessons /> },
+      { path: "admin-profile", element: <AdminProfile /> },
     ],
   },
 ]);
