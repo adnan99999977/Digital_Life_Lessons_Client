@@ -3,28 +3,10 @@ import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import axiosApi from "../../api/axiosInstansce";
-import { AuthContext } from "../../auth/AuthContext";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
 const Pricing = () => {
-  const [user, setUser] = useState(null);
-  const { currentUser } = useContext(AuthContext);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!currentUser) return;
-
-      try {
-        const res = await axiosApi.get("/users", {
-          params: { email: currentUser.email },
-        });
-        setUser(res.data);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      }
-    };
-    fetchUser();
-  }, [currentUser]);
-
+ const { user, loading, error } = useCurrentUser();
 
   const features = [
     { name: "Number of Lessons", free: "10", premium: "Unlimited" },

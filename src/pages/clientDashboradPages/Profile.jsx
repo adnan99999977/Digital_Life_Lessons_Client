@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -12,60 +12,79 @@ import {
   Edit2,
   Camera,
 } from "lucide-react";
-import { AuthContext } from "../../auth/AuthContext";
+import useCurrentUser from "../../hooks/useCurrentUser";
+
+const defaultUserData = {
+  name: "User",
+  email: "User@gmail.com",
+  photoURL: "/default-avatar.png",
+  role: "User",
+  isPremium: false,
+  joinedDate: new Date(),
+  stats: {
+    totalLessons: 0,
+    totalLikes: 0,
+    totalFavorites: 0,
+    totalViews: 0,
+  },
+  lessons: [],
+};
 
 const Profile = () => {
-  const { user } = useContext(AuthContext);
-
-  // Static demo data
-  const [userData, setUserData] = useState({
-    name: user?.displayName || "John Doe",
-    email: user?.email || "john@example.com",
-    photoURL: user?.photoURL || "https://i.pravatar.cc/300?img=12",
-    role: "User",
-    isPremium: true,
-    joinedDate: "March 2024",
-    stats: {
-      totalLessons: 12,
-      totalLikes: 1200,
-      totalFavorites: 340,
-      totalViews: 8900,
-    },
-    lessons: [
-      {
-        id: 1,
-        title: "Learning from Failure",
-        category: "Mindset",
-        emotionalTone: "Realization",
-        image: "https://source.unsplash.com/400x300/?failure",
-        createdAt: "2025-12-05",
-      },
-      {
-        id: 2,
-        title: "Power of Daily Discipline",
-        category: "Personal Growth",
-        emotionalTone: "Motivational",
-        image: "https://source.unsplash.com/400x300/?discipline",
-        createdAt: "2025-12-08",
-      },
-      {
-        id: 3,
-        title: "Gratitude Changes Everything",
-        category: "Mindset",
-        emotionalTone: "Gratitude",
-        image: "https://source.unsplash.com/400x300/?gratitude",
-        createdAt: "2025-12-07",
-      },
-    ],
-  });
-
+  const { user, loading, error, lessons } = useCurrentUser();
+  const [userData, setUserData] = useState(defaultUserData);
   const [editName, setEditName] = useState(false);
   const [editPhoto, setEditPhoto] = useState(false);
   const [newName, setNewName] = useState(userData.name);
-  const [newPhoto, setNewPhoto] = useState(userData.photoURL);
+  const [newPhoto, setNewPhoto] = useState(userData.userImage);
+  const fileInputRef = useRef(null);
+  const triggerFileSelect = () => {
+    fileInputRef.current.click();
+  };
 
-  // Sort lessons by newest first
-  const sortedLessons = [...userData.lessons].sort(
+  useEffect(() => {
+    if (!user) return;
+
+    setUserData({
+      name: user.userName || "Unnamed User",
+      email: user.email,
+      photoURL: user.userImage || defaultUserData.photoURL,
+      role: user.role || "User",
+      isPremium: user.isPremium || false,
+      joinedDate: user.createdAt ? new Date(user.createdAt) : new Date(),
+      stats: {
+        totalLessons: lessons?.length || 0,
+        totalLikes: 0,
+        totalFavorites: 0,
+        totalViews: 0,
+      },
+      lessons: lessons || [],
+    });
+
+    setNewName(user.userName || "Unnamed User");
+    setNewPhoto(user.userImage || defaultUserData.photoURL);
+  }, [user, lessons]);
+
+  if (loading)
+    return (
+      <div className="text-center p-10 text-xl font-semibold">
+        Loading Profile Data...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="text-center p-10 text-xl font-semibold text-red-600">
+        Error: Failed to fetch user data.
+      </div>
+    );
+  if (!user)
+    return (
+      <div className="text-center p-10 text-xl font-semibold text-gray-600">
+        Please log in to view your profile.
+      </div>
+    );
+
+  const sortedLessons = [...lessons].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
@@ -85,38 +104,45 @@ const Profile = () => {
     }
   };
 
+  const formatDate = (date) => {
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      {/* PROFILE HEADER */}
       <motion.div
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
         className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 flex flex-col md:flex-row gap-6"
       >
-        {/* Avatar */}
-        <div className="flex flex-col items-center relative">
+        {/* Avatar  */}
+        <div className="relative group w-36 h-36 mx-auto">
           <img
             src={newPhoto}
             alt="Profile"
-            className="w-36 h-36 rounded-full border-4 border-indigo-500 shadow-md"
+            className="w-full h-full rounded-full border-4 border-indigo-500 shadow-md object-cover"
           />
-          <button
-            onClick={() => setEditPhoto(true)}
-            className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-md hover:shadow-lg transition"
-          >
-            <Camera size={20} />
-          </button>
-          {editPhoto && (
-            <input
-              type="file"
-              accept="image/*"
-              className="mt-2"
-              onChange={handlePhotoUpdate}
-            />
-          )}
-        </div>
 
+          <div
+            onClick={triggerFileSelect}
+            className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+          >
+            <Edit2 className="text-white drop-shadow-md" size={24} />
+          </div>
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoUpdate}
+          />
+        </div>
         {/* User Info */}
         <div className="flex-1 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-2">
@@ -146,9 +172,27 @@ const Profile = () => {
               </>
             )}
 
-            {userData.isPremium && (
+            {userData.isPremium ? (
               <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 text-xs rounded-full">
                 <Crown size={14} /> Premium
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 bg-green-100 text-gre-700 px-2 py-1 text-xs rounded-full">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="size-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+                  />
+                </svg>
+                Free
               </span>
             )}
           </div>
@@ -162,13 +206,13 @@ const Profile = () => {
               <User size={16} /> Role: {userData.role}
             </span>
             <span className="flex items-center gap-1">
-              <Calendar size={16} /> Joined {userData.joinedDate}
+              <Calendar size={16} /> Joined {formatDate(userData.joinedDate)}
             </span>
           </div>
         </div>
       </motion.div>
 
-      {/* STATS */}
+      {/* STATS  */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -185,10 +229,11 @@ const Profile = () => {
         <StatCard icon={<Eye />} label="Views" value="8.9K" />
       </motion.div>
 
-      {/* USER LESSONS */}
       <div className="max-w-6xl mx-auto mt-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Your Public Lessons</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Your Public Lessons
+          </h2>
         </div>
 
         <motion.div
@@ -197,38 +242,51 @@ const Profile = () => {
           transition={{ delay: 0.4 }}
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {sortedLessons.map((lesson) => (
-            <motion.div
-              key={lesson.id}
-              whileHover={{ scale: 1.05 }}
-              className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer group"
-            >
-              <div className="relative">
-                <img
-                  src={lesson.image}
-                  alt={lesson.title}
-                  className="w-full h-44 object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition" />
-              </div>
+          {sortedLessons.length > 0 ? (
+            sortedLessons.map((lesson) => (
+              <motion.div
+                key={lesson.id}
+                whileHover={{ scale: 1.05 }}
+                className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer group"
+              >
+                <div className="relative">
+                  {/* Lesson Image */}
+                  <img
+                    src={lesson.userImage}
+                    alt={lesson.title}
+                    className="w-full h-44 object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition" />
+                </div>
 
-              <div className="p-4">
-                <h3 className="font-semibold text-lg text-gray-800 mb-1">
-                  {lesson.title}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {lesson.category} • {lesson.emotionalTone}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg text-gray-800 mb-1">
+                    {lesson.title}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {lesson.category} • {lesson.emotionalTone}
+                  </p>
+
+                  <div className="flex items-center gap-3 mt-2 text-gray-400 text-sm">
+                    <span className="flex items-center gap-1">
+                      <Heart size={14} /> {lesson.likes || 0}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="col-span-3 text-center py-10 text-gray-500">
+              You don't add any lesson yet !
+            </p>
+          )}
         </motion.div>
       </div>
+      {/* ------------------------------------------- */}
     </div>
   );
 };
 
-/* Stat Card Component */
 const StatCard = ({ icon, label, value }) => (
   <div className="bg-white rounded-xl shadow-md p-5 text-center hover:shadow-lg transition">
     <div className="flex justify-center text-indigo-600 mb-2">{icon}</div>

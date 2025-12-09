@@ -5,11 +5,12 @@ import { Link } from "react-router-dom";
 import { AuthContext } from "../auth/AuthContext";
 import { useForm } from "react-hook-form";
 import axiosApi from "../api/axiosInstansce";
+import useImageUpload from "../hooks/useImageUpload";
+
 
 const Register = () => {
-  const [imageURL, setImageURL] = useState();
-  const [isUploading, setIsUploading] = useState(false);
-  const [fileName, setFileName] = useState("Choose a profile image");
+const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();
+
   const {
     register,
     handleSubmit,
@@ -20,6 +21,13 @@ const Register = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const { setUser, updateUser, registerUser, signInViaGoogle } =
     useContext(AuthContext);
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      uploadFile(file);
+    }
+  };
 
   const handleGoogle = async () => {
     try {
@@ -49,38 +57,18 @@ const Register = () => {
     }
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    setFileName(file.name);
-    setIsUploading(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "DLLimages");
-
-    try {
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dd1sxbdgc/image/upload",
-        { method: "POST", body: formData }
-      );
-      const data = await res.json();
-      setImageURL(data.secure_url);
-    } catch (err) {
-      console.error("Upload failed", err);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleRegister = async (data) => {
     if (!imageURL) {
-      alert("Please upload a profile image first!");
+      alert(
+        isUploading
+          ? "Image is still uploading. Please wait."
+          : "Please upload a profile image first!"
+      );
       return;
     }
 
     try {
       const { confirmPassword, ...userData } = data;
-
       const registrationData = {
         ...userData,
         userImage: imageURL,
@@ -93,16 +81,14 @@ const Register = () => {
         updatedAt: new Date(),
       };
 
-      console.log(data,registrationData)
+      console.log(data, registrationData);
 
-      // 3️⃣ Firebase register
       const userCredential = await registerUser(
         userData.email,
         userData.password
       );
       const currentUser = userCredential.user;
 
-      // 4️⃣ Firebase profile update
       await updateUser(currentUser, {
         displayName: userData.userName,
         photoURL: imageURL,
@@ -113,15 +99,12 @@ const Register = () => {
         photoURL: imageURL,
       });
 
-      // 5️⃣ MongoDB post
       await axiosApi.post("/users", registrationData);
 
       alert("Registration successful!");
     } catch (err) {
       console.error("Registration failed", err);
     }
-
-
   };
 
   const password = watch("password");
@@ -147,7 +130,7 @@ const Register = () => {
         <div className="divider">OR</div>
 
         <form onSubmit={handleSubmit(handleRegister)}>
-          {/* Name */}
+          {/* Name (অপরিবর্তিত) */}
           <label className="form-control w-full mb-3">
             <div className="label">
               <span className="label-text font-medium">Full Name</span>
@@ -172,7 +155,7 @@ const Register = () => {
             )}
           </label>
 
-          {/* Email */}
+          {/* Email (অপরিবর্তিত) */}
           <label className="form-control w-full mb-3">
             <div className="label">
               <span className="label-text font-medium">Email</span>
@@ -198,10 +181,15 @@ const Register = () => {
             )}
           </label>
 
-          {/* Profile Picture */}
+          {/* Profile Picture: এখানে পরিবর্তন করা হয়েছে */}
           <div className="w-full mb-3">
             <label className="label">
-              <span className="label-text font-medium">Profile Picture</span>
+              <span className="label-text font-medium">
+                Profile Picture{" "}
+                {isUploading && (
+                  <span className="text-yellow-600 ml-2">(Uploading...)</span>
+                )}
+              </span>
             </label>
 
             <input
@@ -210,16 +198,38 @@ const Register = () => {
               accept="image/*"
               className="hidden"
               id="profileImage"
-              onChange={handleFileChange}
+              onChange={handleFileSelect} // ⭐ কাস্টম ফাংশন ব্যবহার করা হয়েছে
             />
 
             <div
-              className="flex items-center gap-4 p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
+              className={`flex items-center gap-4 p-2 border rounded-md transition-colors cursor-pointer 
+                          ${
+                            isUploading
+                              ? "border-yellow-500 bg-yellow-50"
+                              : "border-gray-300 hover:bg-gray-50"
+                          }`}
               onClick={() => document.getElementById("profileImage").click()}
             >
-              <span className="text-gray-700 truncate">{fileName}</span>
+              <span
+                className={`truncate ${
+                  isUploading ? "text-yellow-700" : "text-gray-700"
+                }`}
+              >
+                {fileName}
+              </span>
+              {/* Optional: Add image preview if imageURL exists */}
+              {imageURL && (
+                <img
+                  src={imageURL}
+                  alt="Preview"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              )}
             </div>
           </div>
+
+          {/* Password (অপরিবর্তিত) */}
+          {/* ... (বাকি JSX অপরিবর্তিত) ... */}
 
           {/* Password */}
           <div>
@@ -297,10 +307,10 @@ const Register = () => {
             </label>
           </div>
 
-          {/* Register Button */}
+          {/* Register Button: isUploading স্টেট দিয়ে disabled করা হয়েছে */}
           <button
             type="submit"
-            className="btn btn-info w-full mt-2"
+            className="btn btn-info w-full mt-2 text-white"
             disabled={isUploading}
           >
             {isUploading ? "Uploading Image..." : "Register"}

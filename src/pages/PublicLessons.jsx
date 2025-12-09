@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
 import { AuthContext } from "../auth/AuthContext";
 import { useContext, useEffect, useState } from "react";
+import useCurrentUser from "../hooks/useCurrentUser";
 
 const getLessonsData = async () => {
   const res = await axiosApi.get("/lessons");
@@ -11,25 +12,7 @@ const getLessonsData = async () => {
 };
 
 const PublicLessons = () => {
-  const [user, setUser] = useState(null);
-  const { currentUser } = useContext(AuthContext);
-
-  // Fetch the current user's info from MongoDB
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!currentUser) return;
-
-      try {
-        const res = await axiosApi.get("/users", {
-          params: { email: currentUser.email },
-        });
-        setUser(res.data);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      }
-    };
-    fetchUser();
-  }, [currentUser]);
+  const { user, loading, error } = useCurrentUser();
 
   const {
     data: lessons,
@@ -65,8 +48,7 @@ const PublicLessons = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {lessons.map((lesson) => {
-          const isLocked =
-            lesson.accessLevel === "Premium" && !user?.isPremium;
+          const isLocked = lesson.accessLevel === "Premium" && !user?.isPremium;
 
           return (
             <div

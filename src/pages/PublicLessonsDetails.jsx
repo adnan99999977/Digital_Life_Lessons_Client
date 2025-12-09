@@ -4,6 +4,7 @@ import axiosApi from "../api/axiosInstansce";
 import { Lock } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../auth/AuthContext";
+import useCurrentUser from "../hooks/useCurrentUser";
 
 /* ================= API ================= */
 const getLessonDetails = async (id) => {
@@ -59,24 +60,7 @@ const relatedLessonsMock = [
 
 const PublicLessonsDetails = () => {
   const { id } = useParams();
-  const { currentUser } = useContext(AuthContext);
-  const [user, setUser] = useState(null);
-
-  /* ================= FETCH USER ================= */
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!currentUser) return;
-      try {
-        const res = await axiosApi.get("/users", {
-          params: { email: currentUser.email },
-        });
-        setUser(res.data);
-      } catch (err) {
-        console.error("Failed to fetch user:", err);
-      }
-    };
-    fetchUser();
-  }, [currentUser]);
+  const { user, loading, error } = useCurrentUser();
 
   /* ================= FETCH LESSON ================= */
   const {

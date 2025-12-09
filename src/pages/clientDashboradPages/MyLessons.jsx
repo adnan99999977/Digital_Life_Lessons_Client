@@ -102,12 +102,14 @@ const MyLessons = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-4xl font-extrabold text-indigo-700 mb-2">My Lessons</h1>
-      <p className="text-gray-500 mb-6">Manage lessons, track stats, and spotlight premium content.</p>
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-700 mb-2">My Lessons</h1>
+      <p className="text-gray-500 mb-6 text-sm sm:text-base">
+        Manage lessons, track stats, and spotlight premium content.
+      </p>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 mb-6">
         {[
           { title: "Total", value: stats.total, color: "text-indigo-600" },
           { title: "Public", value: stats.public, color: "text-green-600" },
@@ -117,29 +119,29 @@ const MyLessons = () => {
         ].map((s, i) => (
           <motion.div
             key={i}
-            className="bg-white rounded-xl p-4 shadow-md flex flex-col items-start justify-center"
+            className="bg-white rounded-xl p-3 sm:p-4 shadow-md flex flex-col items-start justify-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1, type: "spring", stiffness: 150 }}
           >
-            <p className="text-sm text-gray-500">{s.title}</p>
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+            <p className="text-xs sm:text-sm text-gray-500">{s.title}</p>
+            <p className={`text-xl sm:text-2xl font-bold ${s.color}`}>{s.value}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Lessons Table */}
-      <div className=" bg-white rounded-2xl shadow-lg">
-        <table className="min-w-full text-left">
+      <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
+        <table className="min-w-full text-left table-auto">
           <thead className="bg-indigo-50">
             <tr>
-              <th className="px-4 py-2">Title</th>
-              <th className="px-4 py-2">Category</th>
-              <th className="px-4 py-2">Access</th>
-              <th className="px-4 py-2">Visibility</th>
-              <th className="px-4 py-2">Status</th>
-              <th className="px-4 py-2">Created</th>
-              <th className="px-4 py-2">Actions</th>
+              <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">Title</th>
+              <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">Category</th>
+              <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">Access</th>
+              <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">Visibility</th>
+              <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">Status</th>
+              <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">Created</th>
+              <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -151,24 +153,24 @@ const MyLessons = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   whileHover={{ scale: 1.02, backgroundColor: "#f0f5ff" }}
-                  className="border-b last:border-0"
+                  className="border-b last:border-0 text-xs sm:text-sm"
                 >
-                  <td className="px-4 py-2 font-semibold">{lesson.title}</td>
-                  <td className="px-4 py-2 text-gray-600">{lesson.category}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 sm:px-4 py-2 font-semibold">{lesson.title}</td>
+                  <td className="px-3 sm:px-4 py-2 text-gray-600">{lesson.category}</td>
+                  <td className="px-3 sm:px-4 py-2">
                     <span
                       onClick={() => toggleAccess(lesson.id)}
-                      className={`cursor-pointer px-2 py-1 rounded-full text-white font-semibold ${
+                      className={`cursor-pointer px-2 py-1 rounded-full text-white font-semibold text-xs sm:text-sm ${
                         lesson.access === "Premium" ? "bg-purple-600" : "bg-blue-600"
                       }`}
                     >
                       {lesson.access}
                     </span>
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 sm:px-4 py-2">
                     <span
                       onClick={() => toggleVisibility(lesson.id)}
-                      className={`cursor-pointer px-2 py-1 rounded-full font-semibold ${
+                      className={`cursor-pointer px-2 py-1 rounded-full font-semibold text-xs sm:text-sm ${
                         lesson.visibility === "Public"
                           ? "bg-green-600 text-white"
                           : "bg-gray-400 text-white"
@@ -177,14 +179,28 @@ const MyLessons = () => {
                       {lesson.visibility}
                     </span>
                   </td>
-                  <td className="px-4 py-2">
-                    <span className={`px-2 py-1 rounded-full text-xs ${badgeColor(lesson.status)}`}>{lesson.status}</span>
+                  <td className="px-3 sm:px-4 py-2">
+                    <span className={`px-2 py-1 rounded-full ${badgeColor(lesson.status)} text-xs sm:text-sm`}>
+                      {lesson.status}
+                    </span>
                   </td>
-                  <td className="px-4 py-2">{lesson.createdAt}</td>
-                  <td className="px-4 py-2 flex gap-2">
-                    <motion.div whileHover={{ scale: 1.2 }}><HiOutlineEye className="cursor-pointer text-gray-600" /></motion.div>
-                    <motion.div whileHover={{ scale: 1.2 }}><HiOutlinePencil className="cursor-pointer text-indigo-600" onClick={() => handleEdit(lesson.id)} /></motion.div>
-                    <motion.div whileHover={{ scale: 1.2 }}><HiOutlineTrash className="cursor-pointer text-red-600" onClick={() => { setConfirmOpen(true); setDeleting(lesson.id); }} /></motion.div>
+                  <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm">{lesson.createdAt}</td>
+                  <td className="px-3 sm:px-4 py-2 flex gap-2 text-xs sm:text-sm">
+                    <motion.div whileHover={{ scale: 1.2 }}>
+                      <HiOutlineEye className="cursor-pointer text-gray-600" />
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.2 }}>
+                      <HiOutlinePencil
+                        className="cursor-pointer text-indigo-600"
+                        onClick={() => handleEdit(lesson.id)}
+                      />
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.2 }}>
+                      <HiOutlineTrash
+                        className="cursor-pointer text-red-600"
+                        onClick={() => { setConfirmOpen(true); setDeleting(lesson.id); }}
+                      />
+                    </motion.div>
                   </td>
                 </motion.tr>
               ))}
@@ -198,16 +214,16 @@ const MyLessons = () => {
         {confirmOpen && (
           <motion.div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black/40" onClick={() => setConfirmOpen(false)} />
-            <motion.div className="relative bg-white rounded-2xl p-6 shadow-xl max-w-md w-full"
+            <motion.div className="relative bg-white rounded-2xl p-4 sm:p-6 shadow-xl max-w-md w-full"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
             >
-              <h3 className="text-lg font-semibold">Delete Lesson?</h3>
-              <p className="mt-2 text-gray-500">This action will permanently remove the lesson.</p>
+              <h3 className="text-base sm:text-lg font-semibold">Delete Lesson?</h3>
+              <p className="mt-2 text-gray-500 text-xs sm:text-sm">This action will permanently remove the lesson.</p>
               <div className="flex justify-end gap-2 mt-4">
-                <button className="px-4 py-2 bg-gray-100 rounded-md" onClick={() => setConfirmOpen(false)}>Cancel</button>
-                <button className="px-4 py-2 bg-red-600 text-white rounded-md" onClick={() => handleDelete(deleting)}>Delete</button>
+                <button className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-100 rounded-md text-xs sm:text-sm" onClick={() => setConfirmOpen(false)}>Cancel</button>
+                <button className="px-3 sm:px-4 py-1 sm:py-2 bg-red-600 text-white rounded-md text-xs sm:text-sm" onClick={() => handleDelete(deleting)}>Delete</button>
               </div>
             </motion.div>
           </motion.div>
@@ -219,16 +235,16 @@ const MyLessons = () => {
         {editing !== null && (
           <motion.div className="fixed inset-0 flex items-center justify-center z-50">
             <div className="absolute inset-0 bg-black/40" onClick={closeEdit} />
-            <motion.div className="relative bg-white rounded-2xl p-6 shadow-xl max-w-md w-full"
+            <motion.div className="relative bg-white rounded-2xl p-4 sm:p-6 shadow-xl max-w-md w-full"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
             >
-              <h3 className="text-lg font-semibold">Edit Lesson (Static)</h3>
-              <p className="mt-2 text-gray-500">Form pre-filled with lesson info (static).</p>
+              <h3 className="text-base sm:text-lg font-semibold">Edit Lesson (Static)</h3>
+              <p className="mt-2 text-gray-500 text-xs sm:text-sm">Form pre-filled with lesson info (static).</p>
               <div className="flex justify-end gap-2 mt-4">
-                <button className="px-4 py-2 bg-gray-100 rounded-md" onClick={closeEdit}>Close</button>
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-md">Save</button>
+                <button className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-100 rounded-md text-xs sm:text-sm" onClick={closeEdit}>Close</button>
+                <button className="px-3 sm:px-4 py-1 sm:py-2 bg-indigo-600 text-white rounded-md text-xs sm:text-sm">Save</button>
               </div>
             </motion.div>
           </motion.div>
