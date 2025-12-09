@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useState, useContext } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -9,14 +9,16 @@ import {
   Eye,
   Calendar,
   Mail,
+  Edit2,
+  Camera,
 } from "lucide-react";
 import { AuthContext } from "../../auth/AuthContext";
 
 const Profile = () => {
   const { user } = useContext(AuthContext);
 
-  // Static demo data (DB ready structure)
-  const userData = {
+  // Static demo data
+  const [userData, setUserData] = useState({
     name: user?.displayName || "John Doe",
     email: user?.email || "john@example.com",
     photoURL: user?.photoURL || "https://i.pravatar.cc/300?img=12",
@@ -36,6 +38,7 @@ const Profile = () => {
         category: "Mindset",
         emotionalTone: "Realization",
         image: "https://source.unsplash.com/400x300/?failure",
+        createdAt: "2025-12-05",
       },
       {
         id: 2,
@@ -43,6 +46,7 @@ const Profile = () => {
         category: "Personal Growth",
         emotionalTone: "Motivational",
         image: "https://source.unsplash.com/400x300/?discipline",
+        createdAt: "2025-12-08",
       },
       {
         id: 3,
@@ -50,8 +54,35 @@ const Profile = () => {
         category: "Mindset",
         emotionalTone: "Gratitude",
         image: "https://source.unsplash.com/400x300/?gratitude",
+        createdAt: "2025-12-07",
       },
     ],
+  });
+
+  const [editName, setEditName] = useState(false);
+  const [editPhoto, setEditPhoto] = useState(false);
+  const [newName, setNewName] = useState(userData.name);
+  const [newPhoto, setNewPhoto] = useState(userData.photoURL);
+
+  // Sort lessons by newest first
+  const sortedLessons = [...userData.lessons].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  const handleNameUpdate = () => {
+    setUserData({ ...userData, name: newName });
+    setEditName(false);
+  };
+
+  const handlePhotoUpdate = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => setNewPhoto(reader.result);
+      reader.readAsDataURL(file);
+      setUserData({ ...userData, photoURL: URL.createObjectURL(file) });
+      setEditPhoto(false);
+    }
   };
 
   return (
@@ -64,20 +95,57 @@ const Profile = () => {
         className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl p-6 flex flex-col md:flex-row gap-6"
       >
         {/* Avatar */}
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center relative">
           <img
-            src={userData.photoURL}
+            src={newPhoto}
             alt="Profile"
             className="w-36 h-36 rounded-full border-4 border-indigo-500 shadow-md"
           />
+          <button
+            onClick={() => setEditPhoto(true)}
+            className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-md hover:shadow-lg transition"
+          >
+            <Camera size={20} />
+          </button>
+          {editPhoto && (
+            <input
+              type="file"
+              accept="image/*"
+              className="mt-2"
+              onChange={handlePhotoUpdate}
+            />
+          )}
         </div>
 
         {/* User Info */}
         <div className="flex-1 text-center md:text-left">
           <div className="flex items-center justify-center md:justify-start gap-2">
-            <h1 className="text-3xl font-bold text-gray-800">
-              {userData.name}
-            </h1>
+            {editName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="rounded-xl border p-2"
+                />
+                <button
+                  onClick={handleNameUpdate}
+                  className="bg-indigo-600 text-white px-3 py-1 rounded-xl"
+                >
+                  Save
+                </button>
+              </div>
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-gray-800">
+                  {userData.name}
+                </h1>
+                <button onClick={() => setEditName(true)}>
+                  <Edit2 size={16} className="text-indigo-600" />
+                </button>
+              </>
+            )}
+
             {userData.isPremium && (
               <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 text-xs rounded-full">
                 <Crown size={14} /> Premium
@@ -107,7 +175,11 @@ const Profile = () => {
         transition={{ delay: 0.2 }}
         className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
       >
-        <StatCard icon={<BookOpen />} label="Lessons" value={userData.stats.totalLessons} />
+        <StatCard
+          icon={<BookOpen />}
+          label="Lessons"
+          value={userData.stats.totalLessons}
+        />
         <StatCard icon={<Heart />} label="Likes" value="1.2K" />
         <StatCard icon={<Star />} label="Favorites" value="340" />
         <StatCard icon={<Eye />} label="Views" value="8.9K" />
@@ -116,12 +188,7 @@ const Profile = () => {
       {/* USER LESSONS */}
       <div className="max-w-6xl mx-auto mt-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Your Public Lessons
-          </h2>
-          <button className="text-indigo-600 hover:underline text-sm">
-            View All
-          </button>
+          <h2 className="text-2xl font-bold text-gray-800">Your Public Lessons</h2>
         </div>
 
         <motion.div
@@ -130,7 +197,7 @@ const Profile = () => {
           transition={{ delay: 0.4 }}
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {userData.lessons.map((lesson) => (
+          {sortedLessons.map((lesson) => (
             <motion.div
               key={lesson.id}
               whileHover={{ scale: 1.05 }}

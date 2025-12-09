@@ -129,7 +129,18 @@ const DashboardLayout = () => {
                 </NavLink>
               </li>
 
-              {/* My Lessons */}
+              {/* My favorites */}
+              <li>
+                <NavLink
+                  to="/dashboard/my-favorite"
+                  className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors duration-200"
+                  onClick={() => setDrawerOpen(false)}
+                >
+                  <BookOpenIcon className="h-6 w-6 text-blue-500" />
+                  <span>My Favorites</span>
+                </NavLink>
+              </li>
+              {/* my lessons */}
               <li>
                 <NavLink
                   to="/dashboard/my-lessons"

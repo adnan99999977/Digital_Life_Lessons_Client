@@ -61,11 +61,6 @@ const AddLesson = () => {
   };
 
   const handleAdd = async (data) => {
-    if (!imageURL) {
-      alert("Please upload an image");
-      return;
-    }
-
     const lessonData = {
       ...data,
       userImage: imageURL || "",
@@ -86,7 +81,7 @@ const AddLesson = () => {
     addLessonMutation.mutate(lessonData);
   };
 
-   // Fetch user data from backend
+  // Fetch user data from backend
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -110,9 +105,7 @@ const AddLesson = () => {
     );
   }
 
- const isPremium = !!newUser?.isPremium;
-
-
+  const isPremium = !!newUser?.isPremium;
 
   return (
     <motion.div
@@ -184,6 +177,7 @@ const AddLesson = () => {
                   <option>Career</option>
                   <option>Mindset</option>
                   <option>Relationships</option>
+                  <option>Mistakes Learned</option> {/* Added missing category */}
                 </select>
               </div>
 
@@ -206,11 +200,11 @@ const AddLesson = () => {
             {/* Image Upload */}
             <div>
               <label className="block font-semibold mb-2 text-gray-700 text-lg">
-                Featured Image <span className="text-red-600">*</span>
+                Featured Image
               </label>
               <input
                 type="file"
-                {...register("userImage", { required: true })}
+                {...register("userImage")}
                 accept="image/*"
                 className="hidden"
                 id="lessonImage"

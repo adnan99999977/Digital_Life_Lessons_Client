@@ -93,6 +93,8 @@ const Register = () => {
         updatedAt: new Date(),
       };
 
+      console.log(data,registrationData)
+
       // 3️⃣ Firebase register
       const userCredential = await registerUser(
         userData.email,
@@ -118,6 +120,8 @@ const Register = () => {
     } catch (err) {
       console.error("Registration failed", err);
     }
+
+
   };
 
   const password = watch("password");

@@ -23,6 +23,7 @@ import AdminProfile from "../pages/adminDashboardPages/AdminProfile.jsx";
 import PublicLessonsDetails from "../pages/PublicLessonsDetails.jsx";
 import Payment from "../pages/clientDashboradPages/Payment.jsx";
 import PaymentCancel from "../pages/clientDashboradPages/PaymentCancel.jsx";
+import MyFavorites from "../pages/clientDashboradPages/MyFavorites.jsx";
 
 const router = createBrowserRouter([
   // root layout
@@ -32,10 +33,10 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       { index: true, element: <Home /> },
-      { path: "public-lessons", element: <PublicLessons /> },
-      { path: "log-in", element: <Login /> },
-      { path: "register", element: <Register /> },
-      { path: "public-lessons-details", element: <PublicLessonsDetails /> },
+      { path: "/public-lessons", element: <PublicLessons /> },
+      { path: "/log-in", element: <Login /> },
+      { path: "/register", element: <Register /> },
+      { path: "/public-lessons-details/:id", element: <PublicLessonsDetails /> },
     ],
   },
 
@@ -70,6 +71,7 @@ const router = createBrowserRouter([
       { path: "pricing", element: <Pricing /> },
       { path: "paymentSuccess", element: <Payment /> },
       { path: "paymentCancel", element: <PaymentCancel /> },
+      { path: "my-favorite", element: <MyFavorites /> },
     ],
   },
 

@@ -1,7 +1,7 @@
 import React from "react";
 import axiosApi from "../api/axiosInstansce";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link} from "react-router-dom";
 import { Lock } from "lucide-react";
 
 const getLessonsData = async () => {
@@ -10,7 +10,8 @@ const getLessonsData = async () => {
 };
 
 const PublicLessons = () => {
-  const currentUser = { isPremium: false }; // Replace with real auth context
+  const currentUser = { isPremium: false };
+ 
 
   const {
     data: lessons,
@@ -123,7 +124,7 @@ const PublicLessons = () => {
                 {isLocked ? (
                   <Link to="/dashboard/pricing">
                     <button className="w-full py-2 rounded-xl font-semibold bg-yellow-500 text-white hover:bg-yellow-600 transition-colors">
-                       Upgrade to Premium
+                      Upgrade to Premium
                     </button>
                   </Link>
                 ) : (

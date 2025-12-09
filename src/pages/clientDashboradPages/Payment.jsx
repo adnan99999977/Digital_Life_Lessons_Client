@@ -9,22 +9,22 @@ const Payment = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
 
-  useEffect(() => {
-    const fetchPaymentData = async () => {
-      if (sessionId) {
-        try {
-          const res = await axiosApi.get(
-            `/payment-success?session_id=${sessionId}`
-          );
-          setPaymentData(res.data);
-        } catch (err) {
-          console.error("Payment fetch error:", err);
-        }
-      }
-    };
+ useEffect(() => {
+  const fetchPaymentData = async () => {
+    if (!sessionId) return;
+    try {
+      const res = await axiosApi.get(`/payment-success?session_id=${sessionId}`);
+      setPaymentData(res.data);
 
-    fetchPaymentData();
-  }, [sessionId]);
+      // Update localStorage or React Context
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+    } catch (err) {
+      console.error("Payment fetch error:", err);
+    }
+  };
+  fetchPaymentData();
+}, [sessionId]);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center px-4 py-20">

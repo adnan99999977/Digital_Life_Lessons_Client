@@ -74,8 +74,11 @@ const updateUser = (user, profile) => {
     return () => unsubscribe();
   }, []);
 
+  const currentUser = auth.currentUser;
+
   const authInfo = {
     user,
+    currentUser,
     setUser,
     loading,
     signInViaGoogle,
