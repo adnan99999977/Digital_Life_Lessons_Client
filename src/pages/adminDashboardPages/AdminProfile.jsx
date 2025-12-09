@@ -14,10 +14,19 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminProfile = () => {
-  const [name, setName] = useState("Admin");
+  // Static admin info
+  const [name, setName] = useState("Admin Name");
   const [photo, setPhoto] = useState("/default-avatar.png");
+  const email = "admin@example.com"; // Static email
+  const role = "Admin";
 
-  const activityData = {
+  // Static metrics
+  const totalUsers = 256;
+  const totalLessons = 128;
+  const flaggedLessons = 5;
+
+  // Activity chart data
+  const [activityData, setActivityData] = useState({
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
       {
@@ -31,7 +40,7 @@ const AdminProfile = () => {
         backgroundColor: "#60A5FA",
       },
     ],
-  };
+  });
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -53,21 +62,21 @@ const AdminProfile = () => {
           whileHover={{ scale: 1.03 }}
         >
           <h2 className="text-lg font-semibold text-gray-700">Total Users</h2>
-          <p className="text-3xl font-bold text-blue-600 mt-2">256</p>
+          <p className="text-3xl font-bold text-blue-600 mt-2">{totalUsers}</p>
         </motion.div>
         <motion.div
           className="bg-white p-6 rounded-2xl shadow hover:shadow-xl transition-shadow cursor-pointer"
           whileHover={{ scale: 1.03 }}
         >
           <h2 className="text-lg font-semibold text-gray-700">Total Lessons</h2>
-          <p className="text-3xl font-bold text-blue-600 mt-2">128</p>
+          <p className="text-3xl font-bold text-blue-600 mt-2">{totalLessons}</p>
         </motion.div>
         <motion.div
           className="bg-white p-6 rounded-2xl shadow hover:shadow-xl transition-shadow cursor-pointer"
           whileHover={{ scale: 1.03 }}
         >
           <h2 className="text-lg font-semibold text-gray-700">Flagged Lessons</h2>
-          <p className="text-3xl font-bold text-red-500 mt-2">5</p>
+          <p className="text-3xl font-bold text-red-500 mt-2">{flaggedLessons}</p>
         </motion.div>
       </div>
 
@@ -93,9 +102,8 @@ const AdminProfile = () => {
             onChange={(e) => setName(e.target.value)}
             className="mt-3 w-full text-center border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
           />
-          <span className="mt-2 px-4 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
-            Admin
-          </span>
+          <p className="text-gray-500">{email}</p>
+          <span className="mt-2 px-4 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">{role}</span>
         </motion.div>
 
         {/* Activity Summary */}
@@ -111,7 +119,10 @@ const AdminProfile = () => {
               data={activityData}
               options={{
                 responsive: true,
-                plugins: { legend: { position: "top" }, title: { display: true, text: "Activity Overview" } },
+                plugins: {
+                  legend: { position: "top" },
+                  title: { display: true, text: "Activity Overview" },
+                },
               }}
             />
           </div>

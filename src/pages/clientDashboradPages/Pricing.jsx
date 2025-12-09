@@ -25,7 +25,6 @@ const Pricing = () => {
     fetchUser();
   }, [currentUser]);
 
-  console.log(user)
 
   const features = [
     { name: "Number of Lessons", free: "10", premium: "Unlimited" },

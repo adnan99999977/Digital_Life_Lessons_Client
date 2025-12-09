@@ -1,8 +1,9 @@
-import React from "react";
 import axiosApi from "../api/axiosInstansce";
 import { useQuery } from "@tanstack/react-query";
-import { Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
+import { AuthContext } from "../auth/AuthContext";
+import { useContext, useEffect, useState } from "react";
 
 const getLessonsData = async () => {
   const res = await axiosApi.get("/lessons");
@@ -10,31 +11,51 @@ const getLessonsData = async () => {
 };
 
 const PublicLessons = () => {
-  const currentUser = { isPremium: false };
- 
+  const [user, setUser] = useState(null);
+  const { currentUser } = useContext(AuthContext);
+
+  // Fetch the current user's info from MongoDB
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!currentUser) return;
+
+      try {
+        const res = await axiosApi.get("/users", {
+          params: { email: currentUser.email },
+        });
+        setUser(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
+    fetchUser();
+  }, [currentUser]);
 
   const {
     data: lessons,
-    isLoading,
-    isError,
+    isLoading: lessonsLoading,
+    isError: lessonsError,
   } = useQuery({
     queryKey: ["lessons"],
     queryFn: getLessonsData,
   });
 
-  if (isLoading)
+  // Loading states
+  if (!user || lessonsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-gray-500 font-semibold text-xl">
-        Loading lessons...
+        Loading...
       </div>
     );
+  }
 
-  if (isError)
+  if (lessonsError) {
     return (
       <div className="flex items-center justify-center min-h-screen text-red-500 font-semibold text-xl">
         Error loading lessons
       </div>
     );
+  }
 
   return (
     <div className="px-6 py-12 max-w-7xl mx-auto">
@@ -45,7 +66,7 @@ const PublicLessons = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
         {lessons.map((lesson) => {
           const isLocked =
-            lesson.accessLevel === "Premium" && !currentUser.isPremium;
+            lesson.accessLevel === "Premium" && !user?.isPremium;
 
           return (
             <div
@@ -72,10 +93,10 @@ const PublicLessons = () => {
               </div>
 
               {/* Content Section */}
-              <div className="flex-1  p-5 flex flex-col justify-between">
+              <div className="flex-1 p-5 flex flex-col justify-between">
                 <div>
                   <h2
-                    className={`font-semibold text-lg text-gray-800 mb-2 cursor-pointer  hover:text-blue-600 ${
+                    className={`font-semibold text-lg text-gray-800 mb-2 cursor-pointer hover:text-blue-600 ${
                       isLocked ? "cursor-not-allowed blur-sm brightness-75" : ""
                     }`}
                   >
@@ -136,12 +157,12 @@ const PublicLessons = () => {
                 )}
               </div>
 
-              {/* Lock Overlay for Professional Look */}
+              {/* Lock Overlay */}
               {isLocked && (
                 <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center text-black font-bold text-center rounded-2xl pointer-events-none p-4">
                   <Lock size={28} className="mb-2" />
                   <p className="text-sm ">This lesson is Premium</p>
-                  <p className="text-xs mt-1 ">
+                  <p className="text-xs mt-1">
                     Upgrade your account to access it.
                   </p>
                 </div>

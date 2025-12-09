@@ -1,250 +1,272 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import axiosApi from "../api/axiosInstansce";
-import { useState } from "react";
+import { Lock } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../auth/AuthContext";
 
-const fetchLessonDetails = async (id) => {
+/* ================= API ================= */
+const getLessonDetails = async (id) => {
   const res = await axiosApi.get(`/lessons/${id}`);
   return res.data;
 };
 
-export default function PrivateLessonDetails() {
+/* ================= STATIC RELATED LESSONS ================= */
+const relatedLessonsMock = [
+  {
+    _id: "1",
+    title: "Personal Growth Tip 1",
+    category: "Personal Growth",
+    emotionalTone: "Motivational",
+    userImage: "/default-lesson.png",
+  },
+  {
+    _id: "2",
+    title: "Career Advice 101",
+    category: "Career",
+    emotionalTone: "Motivational",
+    userImage: "/default-lesson.png",
+  },
+  {
+    _id: "3",
+    title: "Relationship Wisdom",
+    category: "Relationships",
+    emotionalTone: "Realization",
+    userImage: "/default-lesson.png",
+  },
+  {
+    _id: "4",
+    title: "Mindset Mastery",
+    category: "Mindset",
+    emotionalTone: "Motivational",
+    userImage: "/default-lesson.png",
+  },
+  {
+    _id: "5",
+    title: "Lessons Learned",
+    category: "Mistakes Learned",
+    emotionalTone: "Gratitude",
+    userImage: "/default-lesson.png",
+  },
+  {
+    _id: "6",
+    title: "Self Reflection",
+    category: "Personal Growth",
+    emotionalTone: "Sad",
+    userImage: "/default-lesson.png",
+  },
+];
+
+const PublicLessonsDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const { currentUser } = useContext(AuthContext);
+  const [user, setUser] = useState(null);
 
-  // Mock user
-  const user = { email: null, isPremium: false };
+  /* ================= FETCH USER ================= */
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!currentUser) return;
+      try {
+        const res = await axiosApi.get("/users", {
+          params: { email: currentUser.email },
+        });
+        setUser(res.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      }
+    };
+    fetchUser();
+  }, [currentUser]);
 
-  const [showReport, setShowReport] = useState(false);
-  const [reportReason, setReportReason] = useState("");
-
-  const { data: lesson, isLoading, isError } = useQuery({
-    queryKey: ["lesson-details", id],
-    queryFn: () => fetchLessonDetails(id),
+  /* ================= FETCH LESSON ================= */
+  const {
+    data: lesson,
+    isLoading: lessonLoading,
+    isError: lessonError,
+  } = useQuery({
+    queryKey: ["lesson", id],
+    queryFn: () => getLessonDetails(id),
     enabled: !!id,
   });
 
-  if (isLoading)
+  /* ================= LOADING / ERROR ================= */
+  if (lessonLoading || !user) {
     return (
-      <div className="h-screen grid place-items-center text-lg font-medium">
+      <div className="min-h-screen flex items-center justify-center text-xl text-gray-500">
         Loading lesson...
       </div>
     );
-
-  if (isError || !lesson)
+  }
+  if (lessonError || !lesson) {
     return (
-      <div className="h-screen grid place-items-center text-red-500">
-        Failed to load lesson
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Lesson not found
       </div>
     );
+  }
 
-  const isLocked =
-    lesson.accessLevel === "Premium" && !user.isPremium;
+  /* ================= LOCK CHECK ================= */
+  const isLocked = lesson.accessLevel === "Free" && !user.isPremium;
 
-  const handleLike = () => {
-    if (!user?.email) {
-      navigate("/login");
-      return;
-    }
-    console.log("Liked");
-  };
+  /* ================= STATIC ENGAGEMENT ================= */
+  const likesCount = lesson.likesCount || 1200;
+  const favoritesCount = lesson.favoritesCount || 342;
+  const viewsCount = lesson.viewsCount || Math.floor(Math.random() * 10000);
+
+  /* ================= STATIC COMMENTS ================= */
+  const commentsMock = [
+    { id: 1, user: "Alice", text: "Great lesson! Learned a lot." },
+    { id: 2, user: "Bob", text: "This is so motivational." },
+    { id: 3, user: "Charlie", text: "Loved the insights here." },
+  ];
+
+  /* ================= INTERACTION HANDLERS ================= */
+  const handleLike = () => alert("Like toggled (mock)");
+  const handleFavorite = () => alert("Favorite toggled (mock)");
+  const handleReport = () => alert("Reported (mock)");
+  const handleShare = () => alert("Shared (mock)");
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 space-y-14">
-      {/* ===== HERO ===== */}
-      <section className="relative rounded-3xl overflow-hidden h-[420px]">
-        <img
-          src={lesson.userImage}
-          className={`w-full h-full object-cover ${
-            isLocked && "blur-md scale-105"
-          }`}
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-        <div className="absolute bottom-0 w-full p-10 text-white space-y-4">
-          <span className="inline-block px-4 py-1 text-xs tracking-widest bg-white/20 rounded-full backdrop-blur">
-            {lesson.category}
-          </span>
-
-          <h1 className="text-4xl font-bold leading-tight max-w-3xl">
-            {lesson.title}
-          </h1>
-
-          <div className="flex items-center gap-4 text-sm text-gray-300">
-            <span>🎼 Tone: {lesson.tone}</span>
-            <span>⏱ 5 min read</span>
-            <span>👁 Public</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== PREMIUM LOCK ===== */}
-      {isLocked && (
-        <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 rounded-3xl p-[1px]">
-          <div className="bg-white rounded-3xl p-12 text-center">
-            <span className="text-6xl">👑</span>
-            <h2 className="text-3xl font-bold mt-4">
-              Premium Lesson
-            </h2>
-            <p className="text-gray-600 mt-3 max-w-md mx-auto">
-              This lesson is part of our exclusive premium
-              collection. Upgrade to unlock full access.
+    <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+      {isLocked ? (
+        /* ================= LOCKED VIEW ================= */
+        <div className="relative rounded-2xl shadow-xl overflow-hidden">
+          <img
+            src={lesson.userImage || "/default-lesson.png"}
+            alt={lesson.title}
+            className="w-full h-72 object-cover blur-md brightness-75"
+          />
+          <div className=" p-10 blur-[4px] gap-3 pt-4 border-t">
+            <img
+              src={lesson.creatorPhotoURL || "/default-avatar.png"}
+              alt={lesson.creatorName}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <h1 className="text-3xl  brightness-75 font-extrabold text-gray-900">
+              {lesson.title}
+            </h1>
+            <p className="text-gray-700  brightness-75 leading-relaxed">
+              {lesson.description}
             </p>
+          </div>
 
+          <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center p-6">
+            <Lock size={40} className="mb-4" />
+            <h2 className="text-2xl font-bold mb-2">
+              Lesson is locked because your are not a Premium user
+            </h2>
+            <p className="mb-6 text-sm text-gray-200">
+              To read this full lesson, you need a premium account.
+            </p>
             <Link
               to="/dashboard/pricing"
-              className="inline-block mt-8 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:opacity-90 transition"
+              className="px-6 py-2 bg-yellow-500 text-black font-semibold rounded-xl hover:bg-yellow-400 transition"
             >
-              Upgrade Premium
+              Upgrade to Premium
             </Link>
           </div>
         </div>
-      )}
-
-      {/* ===== CONTENT ===== */}
-      {!isLocked && (
-        <>
-          {/* DESCRIPTION */}
-          <section className="bg-white rounded-3xl shadow-md p-10 max-w-4xl">
-            <h2 className="text-2xl font-semibold mb-5">
-              Lesson Story
-            </h2>
-            <p className="text-gray-700 leading-loose">
+      ) : (
+        /* ================= UNLOCKED VIEW ================= */
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <img
+            src={lesson.userImage || "/default-lesson.png"}
+            alt={lesson.title}
+            className="w-full h-72 object-cover"
+          />
+          <div className="p-6 space-y-5">
+            <h1 className="text-3xl font-extrabold text-gray-900">
+              {lesson.title}
+            </h1>
+            <p className="text-gray-700 leading-relaxed">
               {lesson.description}
             </p>
-          </section>
+            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+              <span>📌 {lesson.category}</span>
+              <span>🎭 {lesson.emotionalTone}</span>
+              <span>
+                🗓 Created: {new Date(lesson.createdAt).toLocaleDateString()}
+              </span>
+              <span>🗓 Last Updated: {lesson.updatedAt || "N/A"}</span>
+              <span>👁 Visibility: Public</span>
+              <span>⏱ Estimated Reading: 5 min</span>
+            </div>
 
-          {/* AUTHOR */}
-          <section className="bg-white shadow rounded-3xl p-8 flex items-center justify-between max-w-3xl">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 pt-4 border-t">
               <img
-                src={lesson.creatorPhotoURL}
-                className="w-16 h-16 rounded-full object-cover"
+                src={lesson.creatorPhotoURL || "/default-avatar.png"}
+                alt={lesson.creatorName}
+                className="w-12 h-12 rounded-full object-cover"
               />
               <div>
-                <p className="font-semibold text-lg">
-                  {lesson.creatorName}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Lesson Creator
-                </p>
+                <p className="font-semibold">{lesson.creatorName}</p>
+                <p className="text-xs text-gray-500">{lesson.creatorEmail}</p>
+                <p className="text-xs text-gray-400">Total Lessons: 12</p>
+                <Link
+                  to={`/author/${lesson.creatorId}`}
+                  className="text-blue-500 text-xs hover:underline"
+                >
+                  View all lessons by this author
+                </Link>
               </div>
             </div>
 
-            <button className="px-6 py-2 rounded-xl border hover:bg-gray-100 transition">
-              All lessons →
-            </button>
-          </section>
-
-          {/* STATS */}
-          <section className="grid sm:grid-cols-3 gap-6 max-w-4xl">
-            <Stat
-              icon="❤️"
-              value={lesson.likesCount}
-              label="Likes"
-              gradient="from-pink-500 to-red-500"
-            />
-            <Stat
-              icon="🔖"
-              value={lesson.favoritesCount}
-              label="Saved"
-              gradient="from-yellow-500 to-orange-500"
-            />
-            <Stat
-              icon="👀"
-              value={lesson.viewsCount || 1200}
-              label="Views"
-              gradient="from-blue-500 to-indigo-500"
-            />
-          </section>
-
-          {/* ACTIONS */}
-          <section className="flex flex-wrap gap-4">
-            <ActionBtn onClick={handleLike} text="Like ❤️" />
-            <ActionBtn text="Save 🔖" />
-            <ActionBtn
-              text="Report 🚩"
-              danger
-              onClick={() => setShowReport(true)}
-            />
-            <ActionBtn text="Share 🔗" outline />
-          </section>
-        </>
-      )}
-
-      {/* ===== REPORT MODAL ===== */}
-      {showReport && (
-        <div className="fixed inset-0 bg-black/50 grid place-items-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-[420px] space-y-4">
-            <h3 className="font-semibold text-lg">
-              Report Lesson
-            </h3>
-
-            <select
-              className="w-full border rounded-lg p-2"
-              onChange={(e) => setReportReason(e.target.value)}
-            >
-              <option value="">Select reason</option>
-              <option>Inappropriate Content</option>
-              <option>Hate Speech</option>
-              <option>Spam</option>
-              <option>Misleading</option>
-            </select>
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowReport(false)}
-                className="px-4 py-2 border rounded-lg"
-              >
-                Cancel
+            <div className="flex gap-4 pt-4">
+              <button onClick={handleLike}>❤️ {likesCount}</button>
+              <button onClick={handleFavorite}>🔖 {favoritesCount}</button>
+              <span>👀 {viewsCount}</span>
+              <button onClick={handleReport} className="text-red-500 ml-auto">
+                🚩 Report
               </button>
-              <button className="px-4 py-2 bg-red-500 text-white rounded-lg">
-                Submit
+              <button onClick={handleShare} className="ml-2">
+                🔗 Share
               </button>
+            </div>
+
+            <div className="pt-6 border-t space-y-3">
+              <h2 className="font-semibold text-lg">Comments</h2>
+              {commentsMock.map((c) => (
+                <div key={c.id} className="bg-gray-100 p-2 rounded">
+                  <p className="text-sm font-semibold">{c.user}</p>
+                  <p className="text-gray-700 text-sm">{c.text}</p>
+                </div>
+              ))}
+              <textarea
+                placeholder="Write a comment..."
+                className="w-full border p-2 rounded mt-2"
+              />
+              <button className="px-4 py-2 bg-blue-500 text-white rounded mt-2">
+                Post Comment
+              </button>
+            </div>
+
+            <div className="pt-6 border-t">
+              <h2 className="font-semibold text-lg mb-4">Related Lessons</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {relatedLessonsMock.map((l) => (
+                  <Link
+                    to={`/public-lessons-details/${l._id}`}
+                    key={l._id}
+                    className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition"
+                  >
+                    <img
+                      src={l.userImage}
+                      alt={l.title}
+                      className="w-full h-36 object-cover"
+                    />
+                    <div className="p-3">
+                      <p className="font-semibold">{l.title}</p>
+                      <p className="text-xs text-gray-500">{l.category}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       )}
     </div>
   );
-}
+};
 
-/* ===== SMALL REUSABLE UI ===== */
-
-function Stat({ icon, value, label, gradient }) {
-  return (
-    <div
-      className={`rounded-2xl p-6 text-white bg-gradient-to-br ${gradient}`}
-    >
-      <p className="text-3xl">{icon}</p>
-      <p className="text-2xl font-bold mt-2">
-        {value}
-      </p>
-      <p className="text-sm opacity-90">{label}</p>
-    </div>
-  );
-}
-
-function ActionBtn({
-  text,
-  onClick,
-  danger,
-  outline,
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-6 py-3 rounded-xl font-medium transition
-        ${
-          danger
-            ? "bg-red-500 text-white hover:bg-red-600"
-            : outline
-            ? "border hover:bg-gray-100"
-            : "bg-black text-white hover:bg-gray-800"
-        }`}
-    >
-      {text}
-    </button>
-  );
-}
+export default PublicLessonsDetails;
