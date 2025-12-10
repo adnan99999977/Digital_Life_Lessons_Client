@@ -71,7 +71,6 @@ const PublicLessonsDetails = () => {
     }).format(new Date(date));
   };
   const [comment, setComment] = useState("");
-  console.log(user);
 
   // get all comment
   const fetchComments = async () => {
@@ -91,8 +90,8 @@ const PublicLessonsDetails = () => {
     const data = {
       lessonId: id,
       userId: user._id,
-      userName:user.userName,
-      userImage:user.userImage,
+      userName: user.userName,
+      userImage: user.userImage,
       commentText: comment,
       createdAt: new Date(),
     };
@@ -144,9 +143,39 @@ const PublicLessonsDetails = () => {
   const viewsCount = lesson.viewsCount || Math.floor(Math.random() * 10000);
 
   /* ================= INTERACTION HANDLERS ================= */
+  // handle like
   const handleLike = () => alert("Like toggled (mock)");
-  const handleFavorite = () => alert("Favorite toggled (mock)");
+
+
+
+  // favorite item handle
+  const handleFavorite = async () => {
+    try {
+      const data = {
+        userId: user._id,
+        lessonId: id,
+        lessonTitle: lesson.title,
+        lessonCategory: lesson.category,
+        lessonTone: lesson.emotionalTone,
+        createdAt: new Date().toISOString(),
+      };
+      if (user.userName === lesson.creatorName) {
+        return alert("its already your added lesson");
+      }
+      const res = await axiosApi.post("/favorites", data);
+      if (res.status === 201) {
+        alert("Added to favorites!");
+      }
+    } catch (err) {
+      console.error("Failed to add favorite:", err);
+      alert("Could not add favorite.");
+    }
+  };
+
+  // handle report
   const handleReport = () => alert("Reported (mock)");
+
+  // handle share
   const handleShare = () => alert("Shared (mock)");
 
   return (
@@ -204,6 +233,7 @@ const PublicLessonsDetails = () => {
             <p className="text-gray-700 leading-relaxed">
               {lesson.description}
             </p>
+            {/* lesson meta data */}
             <div className="flex items-center flex-wrap gap-4 text-sm text-gray-500">
               <span>📌 {lesson.category}</span>
               <span>🎭 {lesson.emotionalTone}</span>
@@ -235,7 +265,7 @@ const PublicLessonsDetails = () => {
               <span> Visibility: Public</span>
               <span>⏱ Estimated Reading: 5 min</span>
             </div>
-
+            {/* creator info  */}
             <div className="flex items-center gap-3 pt-4 border-t">
               <img
                 src={lesson.creatorPhotoURL || "/default-avatar.png"}
@@ -254,7 +284,7 @@ const PublicLessonsDetails = () => {
                 </Link>
               </div>
             </div>
-
+            {/* inspiration key */}
             <div className="flex flex-wrap items-center gap-5 pt-4 text-slate-500">
               {/* Like */}
               <button className="group flex items-center gap-1 cursor-pointer">
@@ -271,7 +301,10 @@ const PublicLessonsDetails = () => {
               </button>
 
               {/* Favorite */}
-              <button className="group flex items-center gap-1 cursor-pointer">
+              <button
+                onClick={handleFavorite}
+                className="group flex items-center gap-1 cursor-pointer"
+              >
                 <Bookmark
                   className="
         size-5
@@ -287,12 +320,10 @@ const PublicLessonsDetails = () => {
               {/* Views */}
               <div className="group flex items-center gap-1 cursor-pointer">
                 <Eye
-                  className="
-        size-5
-        transition-all duration-300
-        group-hover:text-blue-500
-        group-hover:scale-105
-      "
+                  className="size-5
+                     transition-all duration-300
+                     group-hover:text-blue-500
+                     group-hover:scale-105  "
                 />
                 <span className="text-sm">{viewsCount}</span>
               </div>
@@ -323,7 +354,7 @@ const PublicLessonsDetails = () => {
                 <span className="text-sm">Share</span>
               </button>
             </div>
-
+            {/* comments */}
             <div className="pt-6 border-t space-y-3">
               <h2 className="font-semibold text-lg">Comments</h2>
               {commentsLoading ? (
@@ -341,16 +372,16 @@ const PublicLessonsDetails = () => {
                       />
                       <p className="text-sm font-semibold">{c.userName}</p>
                     </div>
-                   <div className="flex justify-between">
-                     <p className="text-gray-700 text-sm">{c.commentText}</p>
-                     <p className="text-gray-600 pr-3 text-[12px]">
-                      {formatDateTime(c.createdAt)}
-                     </p>
-                   </div>
+                    <div className="flex justify-between">
+                      <p className="text-gray-700 text-sm">{c.commentText}</p>
+                      <p className="text-gray-600 pr-3 text-[12px]">
+                        {formatDateTime(c.createdAt)}
+                      </p>
+                    </div>
                   </div>
                 ))
               )}
-               <form onSubmit={handleComments}>
+              <form onSubmit={handleComments}>
                 <textarea
                   placeholder="Write a comment..."
                   className="w-full border p-2 rounded mt-2"
@@ -365,7 +396,7 @@ const PublicLessonsDetails = () => {
                 </button>
               </form>
             </div>
-
+            {/* related lesson */}
             <div className="pt-6 border-t">
               <h2 className="font-semibold text-lg mb-4">Related Lessons</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
