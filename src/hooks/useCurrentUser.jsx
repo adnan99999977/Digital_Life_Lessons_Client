@@ -11,12 +11,19 @@ const useCurrentUser = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const formatDateTime = (date) => {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(new Date(date));
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (!currentUser?.email) return setLoading(false);
 
       try {
-       
         const userRes = await axiosApi.get("/users", {
           params: { email: currentUser.email },
         });
@@ -38,7 +45,7 @@ const useCurrentUser = () => {
     fetchData();
   }, [currentUser]);
 
-  return { user, lessons, loading, error };
+  return { user, lessons, loading, error, formatDateTime };
 };
 
 export default useCurrentUser;

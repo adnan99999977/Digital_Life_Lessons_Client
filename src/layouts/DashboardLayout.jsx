@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Logo from "../utils/logo/Logo";
 import { useState } from "react";
+import Navbar from "../components/shared/Navbar";
 
 const DashboardLayout = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -44,9 +45,6 @@ const DashboardLayout = () => {
                   <Bars3Icon className="h-6 w-6 text-gray-700" />
                 )}
               </button>
-              <div className="text-lg font-semibold hidden lg:block">
-                Dashboard
-              </div>
             </div>
           </nav>
 

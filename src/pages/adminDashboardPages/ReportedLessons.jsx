@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import LoadingPage from "../../components/shared/LoadingPage";
+import { AuthContext } from "../../auth/AuthContext";
 
 const sampleData = [
   {
@@ -26,6 +28,7 @@ const sampleData = [
 const ReportedLessons = () => {
   const [lessons, setLessons] = useState(sampleData);
   const [modalData, setModalData] = useState(null);
+  const {loading} = useContext(AuthContext)
 
   const openModal = (lesson) => setModalData(lesson);
   const closeModal = () => setModalData(null);
@@ -43,6 +46,14 @@ const ReportedLessons = () => {
       )
     );
   };
+
+  if(loading){
+    return (
+      <div >
+        <LoadingPage/>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 bg-gray-50 min-h-screen">

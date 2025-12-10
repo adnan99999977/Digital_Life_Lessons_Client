@@ -2,9 +2,8 @@ import axiosApi from "../api/axiosInstansce";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Lock } from "lucide-react";
-import { AuthContext } from "../auth/AuthContext";
-import { useContext, useEffect, useState } from "react";
 import useCurrentUser from "../hooks/useCurrentUser";
+import LoadingPage from "../components/shared/LoadingPage";
 
 const getLessonsData = async () => {
   const res = await axiosApi.get("/lessons");
@@ -12,7 +11,7 @@ const getLessonsData = async () => {
 };
 
 const PublicLessons = () => {
-  const { user, loading, error } = useCurrentUser();
+  const { user, } = useCurrentUser();
 
   const {
     data: lessons,
@@ -24,10 +23,10 @@ const PublicLessons = () => {
   });
 
   // Loading states
-  if (!user || lessonsLoading) {
+  if (lessonsLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-500 font-semibold text-xl">
-        Loading...
+      <div >
+       <LoadingPage/>
       </div>
     );
   }

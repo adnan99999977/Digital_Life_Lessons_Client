@@ -24,6 +24,7 @@ import PublicLessonsDetails from "../pages/PublicLessonsDetails.jsx";
 import Payment from "../pages/clientDashboradPages/Payment.jsx";
 import PaymentCancel from "../pages/clientDashboradPages/PaymentCancel.jsx";
 import MyFavorites from "../pages/clientDashboradPages/MyFavorites.jsx";
+import UpdateLesson from "../pages/clientDashboradPages/UpdateLesson.jsx";
 
 const router = createBrowserRouter([
   // root layout
@@ -36,7 +37,14 @@ const router = createBrowserRouter([
       { path: "/public-lessons", element: <PublicLessons /> },
       { path: "/log-in", element: <Login /> },
       { path: "/register", element: <Register /> },
-      { path: "/public-lessons-details/:id", element: <PublicLessonsDetails /> },
+      {
+        path: "/public-lessons-details/:id",
+        element: (
+          <PrivateRoute>
+            <PublicLessonsDetails />
+          </PrivateRoute>
+        ),
+      },
     ],
   },
 
@@ -54,24 +62,17 @@ const router = createBrowserRouter([
       { path: "profile", element: <Profile /> },
       {
         path: "add-lesson",
-        element: (
-          <PrivateRoute>
-            <AddLesson />
-          </PrivateRoute>
-        ),
+        element: <AddLesson />,
       },
       {
         path: "my-lessons",
-        element: (
-          <PrivateRoute>
-            <MyLessons />
-          </PrivateRoute>
-        ),
+        element: <MyLessons />,
       },
       { path: "pricing", element: <Pricing /> },
       { path: "paymentSuccess", element: <Payment /> },
       { path: "paymentCancel", element: <PaymentCancel /> },
       { path: "my-favorite", element: <MyFavorites /> },
+      { path: "update-lesson", element: <UpdateLesson /> },
     ],
   },
 

@@ -1,14 +1,22 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import axiosApi from "../../api/axiosInstansce";
+import { AuthContext } from "../../auth/AuthContext";
+import LoadingPage from "../../components/shared/LoadingPage";
 
-const sampleUsers = [
-  { id: 1, name: "John Doe", email: "john@example.com", role: "User", lessons: 3 },
-  { id: 2, name: "Alice Smith", email: "alice@example.com", role: "Admin", lessons: 10 },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com", role: "User", lessons: 5 },
-  { id: 4, name: "Clara Williams", email: "clara@example.com", role: "User", lessons: 0 },
-];
+
 
 const ManageUsers = () => {
-  const [users, setUsers] = useState(sampleUsers);
+  const [users, setUsers] = useState([]);
+  const {loading} = useContext(AuthContext)
+  
+
+  useEffect(() => {
+    const getUsers = async () => {
+      const users = await axiosApi.get("/users");
+      setUsers(users.data)
+    };
+    getUsers()
+  }, []);
 
   // Toggle user role
   const toggleRole = (id) => {
@@ -28,6 +36,12 @@ const ManageUsers = () => {
     }
   };
 
+  if(loading){
+    <div>
+      <LoadingPage/>
+    </div>
+  }
+
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-8">
@@ -38,11 +52,21 @@ const ManageUsers = () => {
         <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
           <thead className="bg-gray-100">
             <tr>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">Name</th>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">Email</th>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">Role</th>
-              <th className="text-left px-6 py-3 text-gray-600 font-medium">Total Lessons</th>
-              <th className="text-center px-6 py-3 text-gray-600 font-medium">Actions</th>
+              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+                Name
+              </th>
+              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+                Email
+              </th>
+              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+                Role
+              </th>
+              <th className="text-left px-6 py-3 text-gray-600 font-medium">
+                Total Lessons
+              </th>
+              <th className="text-center px-6 py-3 text-gray-600 font-medium">
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -72,7 +96,9 @@ const ManageUsers = () => {
                     }`}
                     onClick={() => toggleRole(user.id)}
                   >
-                    {user.role === "Admin" ? "Demote to User" : "Promote to Admin"}
+                    {user.role === "Admin"
+                      ? "Demote to User"
+                      : "Promote to Admin"}
                   </button>
 
                   <button

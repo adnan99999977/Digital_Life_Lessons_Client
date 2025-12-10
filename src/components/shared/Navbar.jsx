@@ -9,7 +9,6 @@ const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -17,9 +16,7 @@ const Navbar = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleLogout = () => {
@@ -27,7 +24,6 @@ const Navbar = () => {
     setDropdownOpen(false);
   };
 
-  // NavLink config
   const commonNavItems = [
     { name: "Home", path: "/" },
     { name: "Public Lessons", path: "/public-lessons" },
@@ -36,13 +32,14 @@ const Navbar = () => {
   const roleNavItems = {
     admin: [{ name: "Admin Dashboard", path: "/admin-dashboard" }],
     user: [
-      { name: "Dashboard", path: "/dashboard" },
       { name: "Add Lesson", path: "/dashboard/add-lesson" },
       { name: "My Lessons", path: "/dashboard/my-lessons" },
+      { name: "Pricing", path: "/dashboard/pricing" },
+      { name: "Dashboard", path: "/dashboard" },
     ],
   };
 
-  const currentRole = user?.displayName === "AdnanAdmin" ? "admin" : "user";
+  const currentRole = user?.displayName === "Admin Vaiya" ? "admin" : "user";
 
   return (
     <div className="fixed bg-transparent backdrop-blur-md top-0 left-0 w-full z-50 shadow-lg">
@@ -85,14 +82,18 @@ const Navbar = () => {
                   <NavLink to={item.path}>{item.name}</NavLink>
                 </li>
               ))}
-              {roleNavItems[currentRole].map((item) => (
-                <li
-                  key={item.name}
-                  className="hover:bg-blue-100 transition-colors rounded-md"
-                >
-                  <NavLink to={item.path}>{item.name}</NavLink>
-                </li>
-              ))}
+
+              {roleNavItems[currentRole].map((item) => {
+                if (!user && item.path === "/dashboard") return null; // hide /dashboard if no user
+                return (
+                  <li
+                    key={item.name}
+                    className="hover:bg-blue-100 transition-colors rounded-md"
+                  >
+                    <NavLink to={item.path}>{item.name}</NavLink>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -113,16 +114,20 @@ const Navbar = () => {
                 </NavLink>
               </li>
             ))}
-            {roleNavItems[currentRole].map((item) => (
-              <li key={item.name} className="group">
-                <NavLink
-                  to={item.path}
-                  className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
-                >
-                  {item.name}
-                </NavLink>
-              </li>
-            ))}
+
+            {roleNavItems[currentRole].map((item) => {
+              if (!user && item.path === "/dashboard") return null; // hide /dashboard if no user
+              return (
+                <li key={item.name} className="group">
+                  <NavLink
+                    to={item.path}
+                    className="transition-all duration-200 hover:text-blue-600 relative after:content-[''] after:block after:w-0 after:h-[2px] after:bg-blue-600 after:transition-all after:duration-300 group-hover:after:w-full"
+                  >
+                    {item.name}
+                  </NavLink>
+                </li>
+              );
+            })}
           </ul>
         </div>
 

@@ -13,6 +13,7 @@ import {
   Camera,
 } from "lucide-react";
 import useCurrentUser from "../../hooks/useCurrentUser";
+import LoadingPage from "../../components/shared/LoadingPage";
 
 const defaultUserData = {
   name: "User",
@@ -67,8 +68,8 @@ const Profile = () => {
 
   if (loading)
     return (
-      <div className="text-center p-10 text-xl font-semibold">
-        Loading Profile Data...
+      <div >
+        <LoadingPage/>
       </div>
     );
   if (error)

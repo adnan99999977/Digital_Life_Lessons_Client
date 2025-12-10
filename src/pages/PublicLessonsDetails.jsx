@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import axiosApi from "../api/axiosInstansce";
 import { Lock } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../auth/AuthContext";
+import { useState } from "react";
 import useCurrentUser from "../hooks/useCurrentUser";
+import LoadingPage from "../components/shared/LoadingPage";
+import { Heart, Bookmark, Eye, Flag, Share2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /* ================= API ================= */
 const getLessonDetails = async (id) => {
@@ -60,7 +62,51 @@ const relatedLessonsMock = [
 
 const PublicLessonsDetails = () => {
   const { id } = useParams();
-  const { user, loading, error } = useCurrentUser();
+  const { user } = useCurrentUser();
+  const formatDateTime = (date) => {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(new Date(date));
+  };
+  const [comment, setComment] = useState("");
+  console.log(user);
+
+  // get all comment
+  const fetchComments = async () => {
+    const res = await axiosApi.get(`/comments?lessonId=${id}`);
+    return res.data;
+  };
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: ["comments", id],
+    queryFn: fetchComments,
+    enabled: !!id,
+  });
+
+  // comment handle
+  const handleComments = async (e) => {
+    e.preventDefault();
+    if (!comment.trim()) return;
+    const data = {
+      lessonId: id,
+      userId: user._id,
+      userName:user.userName,
+      userImage:user.userImage,
+      commentText: comment,
+      createdAt: new Date(),
+    };
+    addCommentMutation.mutate(data);
+  };
+
+  const queryClient = useQueryClient();
+  const addCommentMutation = useMutation({
+    mutationFn: (commentData) => axiosApi.post("/comments", commentData),
+    onSuccess: () => {
+      setComment("");
+      queryClient.invalidateQueries(["comments", id]);
+    },
+  });
 
   /* ================= FETCH LESSON ================= */
   const {
@@ -76,8 +122,8 @@ const PublicLessonsDetails = () => {
   /* ================= LOADING / ERROR ================= */
   if (lessonLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl text-gray-500">
-        Loading lesson...
+      <div>
+        <LoadingPage />
       </div>
     );
   }
@@ -96,13 +142,6 @@ const PublicLessonsDetails = () => {
   const likesCount = lesson.likesCount || 1200;
   const favoritesCount = lesson.favoritesCount || 342;
   const viewsCount = lesson.viewsCount || Math.floor(Math.random() * 10000);
-
-  /* ================= STATIC COMMENTS ================= */
-  const commentsMock = [
-    { id: 1, user: "Alice", text: "Great lesson! Learned a lot." },
-    { id: 2, user: "Bob", text: "This is so motivational." },
-    { id: 3, user: "Charlie", text: "Loved the insights here." },
-  ];
 
   /* ================= INTERACTION HANDLERS ================= */
   const handleLike = () => alert("Like toggled (mock)");
@@ -165,14 +204,35 @@ const PublicLessonsDetails = () => {
             <p className="text-gray-700 leading-relaxed">
               {lesson.description}
             </p>
-            <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+            <div className="flex items-center flex-wrap gap-4 text-sm text-gray-500">
               <span>📌 {lesson.category}</span>
               <span>🎭 {lesson.emotionalTone}</span>
               <span>
                 🗓 Created: {new Date(lesson.createdAt).toLocaleDateString()}
               </span>
-              <span>🗓 Last Updated: {lesson.updatedAt || "N/A"}</span>
-              <span>👁 Visibility: Public</span>
+              <span>🗓 Last Updated: {formatDateTime(lesson.updatedAt)}</span>
+              <span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="size-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                  />
+                </svg>
+              </span>
+              <span> Visibility: Public</span>
               <span>⏱ Estimated Reading: 5 min</span>
             </div>
 
@@ -195,33 +255,115 @@ const PublicLessonsDetails = () => {
               </div>
             </div>
 
-            <div className="flex gap-4 pt-4">
-              <button onClick={handleLike}>❤️ {likesCount}</button>
-              <button onClick={handleFavorite}>🔖 {favoritesCount}</button>
-              <span>👀 {viewsCount}</span>
-              <button onClick={handleReport} className="text-red-500 ml-auto">
-                🚩 Report
+            <div className="flex flex-wrap items-center gap-5 pt-4 text-slate-500">
+              {/* Like */}
+              <button className="group flex items-center gap-1 cursor-pointer">
+                <Heart
+                  className="
+        size-6
+        transition-all duration-300
+        group-hover:text-red-500
+        group-hover:fill-red-500/30
+        group-hover:scale-110
+      "
+                />
+                <span className="text-sm">{likesCount}</span>
               </button>
-              <button onClick={handleShare} className="ml-2">
-                🔗 Share
+
+              {/* Favorite */}
+              <button className="group flex items-center gap-1 cursor-pointer">
+                <Bookmark
+                  className="
+        size-5
+        transition-all duration-300
+        group-hover:text-yellow-500
+        group-hover:fill-yellow-400/30
+        group-hover:scale-110
+      "
+                />
+                <span className="text-sm">{favoritesCount}</span>
+              </button>
+
+              {/* Views */}
+              <div className="group flex items-center gap-1 cursor-pointer">
+                <Eye
+                  className="
+        size-5
+        transition-all duration-300
+        group-hover:text-blue-500
+        group-hover:scale-105
+      "
+                />
+                <span className="text-sm">{viewsCount}</span>
+              </div>
+
+              {/* Report */}
+              <button className="ml-auto group flex items-center gap-1 cursor-pointer">
+                <Flag
+                  className="
+        size-5
+        transition-all duration-300
+        group-hover:text-red-600
+        group-hover:scale-110
+      "
+                />
+                <span className="text-sm">Report</span>
+              </button>
+
+              {/* Share */}
+              <button className="group flex items-center gap-1 cursor-pointer">
+                <Share2
+                  className="
+        size-5
+        transition-all duration-300
+        group-hover:text-indigo-600
+        group-hover:scale-110
+      "
+                />
+                <span className="text-sm">Share</span>
               </button>
             </div>
 
             <div className="pt-6 border-t space-y-3">
               <h2 className="font-semibold text-lg">Comments</h2>
-              {commentsMock.map((c) => (
-                <div key={c.id} className="bg-gray-100 p-2 rounded">
-                  <p className="text-sm font-semibold">{c.user}</p>
-                  <p className="text-gray-700 text-sm">{c.text}</p>
+              {commentsLoading ? (
+                <div>
+                  <LoadingPage />
                 </div>
-              ))}
-              <textarea
-                placeholder="Write a comment..."
-                className="w-full border p-2 rounded mt-2"
-              />
-              <button className="px-4 py-2 bg-blue-500 text-white rounded mt-2">
-                Post Comment
-              </button>
+              ) : (
+                comments.map((c) => (
+                  <div key={c._id} className="bg-gray-100 p-2 rounded">
+                    <div className="flex items-center gap-2 mb-1">
+                      <img
+                        src={c.userImage}
+                        className="w-8 h-8 rounded-full"
+                        alt=""
+                      />
+                      <p className="text-sm font-semibold">{c.userName}</p>
+                    </div>
+                   <div className="flex justify-between">
+                     <p className="text-gray-700 text-sm">{c.commentText}</p>
+                     <p className="text-gray-600 pr-3 text-[12px]">
+                      {formatDateTime(c.createdAt)}
+                     </p>
+                   </div>
+                  </div>
+                ))
+              )}
+               <form onSubmit={handleComments}>
+                <textarea
+                  placeholder="Write a comment..."
+                  className="w-full border p-2 rounded mt-2"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white hover:bg-blue-700 rounded mt-2"
+                >
+                  Send
+                </button>
+              </form>
             </div>
 
             <div className="pt-6 border-t">

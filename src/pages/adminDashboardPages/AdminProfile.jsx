@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Bar } from "react-chartjs-2";
 import {
@@ -10,23 +10,39 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import useCurrentUser from "../../hooks/useCurrentUser";
+import LoadingPage from "../../components/shared/LoadingPage";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminProfile = () => {
-  // Static admin info
-  const [name, setName] = useState("Admin Name");
-  const [photo, setPhoto] = useState("/default-avatar.png");
-  const email = "admin@example.com"; // Static email
+  const { user, loading, error, lessons = [] } = useCurrentUser();
+
+  const [name, setName] = useState("");
+  const [photo, setPhoto] = useState('');
+
+  const email = user?.email || "admin@example.com";
   const role = "Admin";
 
-  // Static metrics
+  useEffect(() => {
+    if (user?.name) {
+      setName(user.name);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.userImage) {
+      setPhoto(user.userImage);
+    }
+  }, [user]);
+
+  // Static metrics (later API driven করা যাবে)
   const totalUsers = 256;
-  const totalLessons = 128;
+  const totalLessons = lessons.length || 128;
   const flaggedLessons = 5;
 
-  // Activity chart data
-  const [activityData, setActivityData] = useState({
+  // Static activity chart
+  const activityData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
       {
@@ -40,20 +56,33 @@ const AdminProfile = () => {
         backgroundColor: "#60A5FA",
       },
     ],
-  });
+  };
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setPhoto(reader.result);
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => setPhoto(reader.result);
+    reader.readAsDataURL(file);
   };
+
+  // ✅ Loading & Error handling
+  if (loading) {
+    return <div >
+        <LoadingPage/>
+      </div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-20 text-red-500">Failed to load profile</div>;
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">Admin Profile</h1>
+      <h1 className="text-4xl font-bold text-gray-800 mb-4">
+        Admin Profile
+      </h1>
 
       {/* Top Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -64,6 +93,7 @@ const AdminProfile = () => {
           <h2 className="text-lg font-semibold text-gray-700">Total Users</h2>
           <p className="text-3xl font-bold text-blue-600 mt-2">{totalUsers}</p>
         </motion.div>
+
         <motion.div
           className="bg-white p-6 rounded-2xl shadow hover:shadow-xl transition-shadow cursor-pointer"
           whileHover={{ scale: 1.03 }}
@@ -71,6 +101,7 @@ const AdminProfile = () => {
           <h2 className="text-lg font-semibold text-gray-700">Total Lessons</h2>
           <p className="text-3xl font-bold text-blue-600 mt-2">{totalLessons}</p>
         </motion.div>
+
         <motion.div
           className="bg-white p-6 rounded-2xl shadow hover:shadow-xl transition-shadow cursor-pointer"
           whileHover={{ scale: 1.03 }}
@@ -80,7 +111,7 @@ const AdminProfile = () => {
         </motion.div>
       </div>
 
-      {/* Main Profile + Activity */}
+      {/* Profile + Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
         <motion.div
@@ -92,18 +123,29 @@ const AdminProfile = () => {
             alt="Admin Avatar"
             className="w-36 h-36 rounded-full border-4 border-blue-500 shadow-md object-cover"
           />
+
           <label className="mt-2 cursor-pointer text-blue-600 font-medium hover:underline">
-            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
             Update Photo
           </label>
+
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="mt-3 w-full text-center border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
           />
+
           <p className="text-gray-500">{email}</p>
-          <span className="mt-2 px-4 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">{role}</span>
+
+          <span className="mt-2 px-4 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
+            {role}
+          </span>
         </motion.div>
 
         {/* Activity Summary */}
@@ -113,7 +155,9 @@ const AdminProfile = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">Activity Summary</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">
+            Activity Summary
+          </h2>
           <div className="h-64">
             <Bar
               data={activityData}

@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
+import LoadingPage from "../../components/shared/LoadingPage";
+import { AuthContext } from "../../auth/AuthContext";
 
 const sampleLessons = [
   {
@@ -54,6 +56,8 @@ const ManageLessons = () => {
   const [filterVisibility, setFilterVisibility] = useState("");
   const [filterFlagged, setFilterFlagged] = useState(false);
   const [sortOption, setSortOption] = useState("newest");
+    const {loading} = useContext(AuthContext)
+  
 
   // DELETE LESSON
   const deleteLesson = (id) => {
@@ -102,6 +106,14 @@ const ManageLessons = () => {
     privateLessons: lessons.filter((l) => l.visibility === "Private").length,
     flaggedLessons: lessons.filter((l) => l.flags > 0).length,
   };
+
+  if(loading){
+    return (
+      <div>
+        <LoadingPage/>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 min-h-screen">

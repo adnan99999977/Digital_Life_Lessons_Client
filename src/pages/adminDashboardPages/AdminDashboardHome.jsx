@@ -1,4 +1,4 @@
-import React from "react";
+import { useContext } from "react";
 import { motion } from "framer-motion";
 import {
   UserIcon,
@@ -18,6 +18,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import LoadingPage from "../../components/shared/LoadingPage";
+import { AuthContext } from "../../auth/AuthContext";
 
 ChartJS.register(
   CategoryScale,
@@ -30,6 +32,7 @@ ChartJS.register(
 );
 
 const AdminDashboardHome = () => {
+  const { loading } = useContext(AuthContext);
   // Charts data
   const lessonGrowthData = {
     labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -61,11 +64,32 @@ const AdminDashboardHome = () => {
 
   // Static cards data
   const cards = [
-    { icon: <UserIcon className="w-10 h-10 text-blue-500" />, title: "Total Users", value: "1,245" },
-    { icon: <BookOpenIcon className="w-10 h-10 text-green-500" />, title: "Total Public Lessons", value: "3,456" },
-    { icon: <FlagIcon className="w-10 h-10 text-red-500" />, title: "Reported Lessons", value: "78", viewDetails: true },
-    { icon: <StarIcon className="w-10 h-10 text-yellow-500" />, title: "Top Contributors", value: "12" },
-    { icon: <CalendarIcon className="w-10 h-10 text-purple-500" />, title: "New Lessons Today", value: "24" },
+    {
+      icon: <UserIcon className="w-10 h-10 text-blue-500" />,
+      title: "Total Users",
+      value: "1,245",
+    },
+    {
+      icon: <BookOpenIcon className="w-10 h-10 text-green-500" />,
+      title: "Total Public Lessons",
+      value: "3,456",
+    },
+    {
+      icon: <FlagIcon className="w-10 h-10 text-red-500" />,
+      title: "Reported Lessons",
+      value: "78",
+      viewDetails: true,
+    },
+    {
+      icon: <StarIcon className="w-10 h-10 text-yellow-500" />,
+      title: "Top Contributors",
+      value: "12",
+    },
+    {
+      icon: <CalendarIcon className="w-10 h-10 text-purple-500" />,
+      title: "New Lessons Today",
+      value: "24",
+    },
   ];
 
   const topContributors = [
@@ -74,6 +98,12 @@ const AdminDashboardHome = () => {
     { name: "Carol Lee", lessons: 25 },
     { name: "David Kim", lessons: 20 },
   ];
+
+  if (loading) {
+    <div>
+      <LoadingPage />
+    </div>;
+  }
 
   return (
     <div className="p-6 bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
@@ -97,7 +127,9 @@ const AdminDashboardHome = () => {
           >
             {card.icon}
             <p className="text-gray-500">{card.title}</p>
-            <p className="text-xl md:text-2xl font-semibold text-gray-900">{card.value}</p>
+            <p className="text-xl md:text-2xl font-semibold text-gray-900">
+              {card.value}
+            </p>
             {card.viewDetails && (
               <button className="mt-2 text-indigo-600 text-sm hover:underline">
                 View Details
@@ -116,7 +148,13 @@ const AdminDashboardHome = () => {
           <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">
             Lesson Growth (This Week)
           </h2>
-          <Line data={lessonGrowthData} options={{ responsive: true, plugins: { tooltip: { mode: "index", intersect: false } } }} />
+          <Line
+            data={lessonGrowthData}
+            options={{
+              responsive: true,
+              plugins: { tooltip: { mode: "index", intersect: false } },
+            }}
+          />
         </motion.div>
 
         <motion.div
@@ -126,20 +164,33 @@ const AdminDashboardHome = () => {
           <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">
             User Growth (Monthly)
           </h2>
-          <Line data={userGrowthData} options={{ responsive: true, plugins: { tooltip: { mode: "index", intersect: false } } }} />
+          <Line
+            data={userGrowthData}
+            options={{
+              responsive: true,
+              plugins: { tooltip: { mode: "index", intersect: false } },
+            }}
+          />
         </motion.div>
       </div>
 
       {/* Top Contributors */}
       <div className="mt-10 max-w-6xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Most Active Contributors</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          Most Active Contributors
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {topContributors.map((user, idx) => (
-            <div key={idx} className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center">
+            <div
+              key={idx}
+              className="bg-white shadow-md rounded-xl p-4 flex flex-col items-center"
+            >
               <div className="w-16 h-16 bg-indigo-200 rounded-full flex items-center justify-center text-indigo-800 font-bold text-lg">
                 {user.name[0]}
               </div>
-              <p className="mt-2 font-semibold text-gray-700 text-center">{user.name}</p>
+              <p className="mt-2 font-semibold text-gray-700 text-center">
+                {user.name}
+              </p>
               <p className="text-sm text-gray-500">{user.lessons} Lessons</p>
             </div>
           ))}
