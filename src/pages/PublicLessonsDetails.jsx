@@ -153,6 +153,7 @@ const PublicLessonsDetails = () => {
     try {
       const data = {
         userId: user._id,
+        userEmail:user.email,
         lessonId: id,
         lessonTitle: lesson.title,
         lessonCategory: lesson.category,

@@ -1,52 +1,69 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Trash2, Eye } from "lucide-react";
+import useCurrentUserFav from "../../hooks/useCurrentUserFav";
+import LoadingPage from "../../components/shared/LoadingPage";
+import { Link } from "react-router-dom";
 
 const MyFavorites = () => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [toneFilter, setToneFilter] = useState("");
+  const { favorites, loading, error } = useCurrentUserFav();
 
-  // Static favorite lessons
-  const favorites = [
-    { id: 1, title: "Mindfulness", category: "Personal Growth", emotionalTone: "Motivational", createdAt: "2025-12-08" },
-    { id: 2, title: "Time Management", category: "Career", emotionalTone: "Realization", createdAt: "2025-12-07" },
-    { id: 3, title: "Gratitude Practice", category: "Mindset", emotionalTone: "Gratitude", createdAt: "2025-12-06" },
-    { id: 4, title: "Avoiding Mistakes", category: "Mistakes Learned", emotionalTone: "Sad", createdAt: "2025-12-05" },
-  ];
-
-  const filteredFavorites = favorites.filter((lesson) => {
+  const filteredFavorites = favorites.filter((fav) => {
     return (
-      (!categoryFilter || lesson.category === categoryFilter) &&
-      (!toneFilter || lesson.emotionalTone === toneFilter)
+      (!categoryFilter || fav.lessonCategory === categoryFilter) &&
+      (!toneFilter || fav.lessonTone === toneFilter)
     );
   });
 
+  const handleDeleteFav = ()=>{
+    
+  }
+
+  if (loading) return <LoadingPage />;
+
+  if (error)
+    return (
+      <div className="text-center p-10 text-xl font-semibold text-red-600">
+        Failed to load favorites
+      </div>
+    );
+
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-indigo-50 to-purple-50">
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto mb-8">
-        <h1 className="text-4xl font-extrabold text-purple-800 mb-2">My Favorites ⭐</h1>
-        <p className="text-gray-600">View your saved lessons in one place.</p>
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-6xl mx-auto mb-8"
+      >
+        <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
+          My Favorites ⭐
+        </h1>
+        <p className="text-gray-600">
+          View your saved lessons in one place.
+        </p>
       </motion.div>
 
       {/* Filters */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto flex flex-wrap gap-4 mb-6">
+      <div className="max-w-6xl mx-auto flex flex-wrap gap-4 mb-6">
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="rounded-2xl border p-3 shadow-sm hover:shadow-md transition"
+          className="rounded-xl border p-3"
         >
           <option value="">All Categories</option>
           <option>Personal Growth</option>
           <option>Career</option>
           <option>Mindset</option>
           <option>Relationships</option>
-          <option>Mistakes Learned</option>
         </select>
 
         <select
           value={toneFilter}
           onChange={(e) => setToneFilter(e.target.value)}
-          className="rounded-2xl border p-3 shadow-sm hover:shadow-md transition"
+          className="rounded-xl border p-3"
         >
           <option value="">All Tones</option>
           <option>Motivational</option>
@@ -54,20 +71,21 @@ const MyFavorites = () => {
           <option>Realization</option>
           <option>Gratitude</option>
         </select>
-      </motion.div>
+      </div>
 
-      {/* Favorites Table */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl overflow-x-auto">
-        <table className="min-w-full table-auto">
+      {/* Table */}
+      <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl overflow-x-auto">
+        <table className="min-w-full">
           <thead className="bg-purple-100 text-purple-800">
             <tr>
-              <th className="px-6 py-3 text-left font-semibold">Title</th>
-              <th className="px-6 py-3 text-left font-semibold">Category</th>
-              <th className="px-6 py-3 text-left font-semibold">Emotional Tone</th>
-              <th className="px-6 py-3 text-left font-semibold">Date Added</th>
-              <th className="px-6 py-3 text-center font-semibold">Actions</th>
+              <th className="px-6 py-3 text-left">Title</th>
+              <th className="px-6 py-3 text-left">Category</th>
+              <th className="px-6 py-3 text-left">Tone</th>
+              <th className="px-6 py-3 text-left">Added</th>
+              <th className="px-6 py-3 text-center">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {filteredFavorites.length === 0 ? (
               <tr>
@@ -76,26 +94,34 @@ const MyFavorites = () => {
                 </td>
               </tr>
             ) : (
-              filteredFavorites.map((lesson) => (
-                <tr key={lesson.id} className="border-b hover:bg-purple-50 transition">
-                  <td className="px-6 py-4">{lesson.title}</td>
-                  <td className="px-6 py-4">{lesson.category}</td>
-                  <td className="px-6 py-4">{lesson.emotionalTone}</td>
-                  <td className="px-6 py-4">{lesson.createdAt}</td>
-                  <td className="px-6 py-4 text-center flex justify-center gap-4">
-                    <button className="text-red-500 hover:text-red-700 transition">
+              filteredFavorites.map((fav) => (
+                <tr
+                  key={fav._id}
+                  className="border-b hover:bg-purple-50"
+                >
+                  <td className="px-6 py-4">{fav.lessonTitle}</td>
+                  <td className="px-6 py-4">{fav.lessonCategory}</td>
+                  <td className="px-6 py-4">{fav.lessonTone}</td>
+                  <td className="px-6 py-4">
+                    {new Date(fav.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 flex justify-center gap-4">
+                    <button onClick={handleDeleteFav} className="text-red-500 hover:text-red-700">
                       <Trash2 size={20} />
                     </button>
-                    <button className="text-indigo-600 hover:text-indigo-800 transition">
+                    <Link
+                      to={`/public-lessons-details/${fav.lessonId}`}
+                      className="text-indigo-600 hover:text-indigo-800"
+                    >
                       <Eye size={20} />
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </motion.div>
+      </div>
     </div>
   );
 };
