@@ -53,12 +53,12 @@ const Profile = () => {
       role: user.role || "User",
       isPremium: user.isPremium || false,
       joinedDate: user.createdAt ? new Date(user.createdAt) : new Date(),
-      stats: {
-        totalLessons: lessons?.length || 0,
-        totalLikes: 0,
-        totalFavorites: 0,
-        totalViews: 0,
-      },
+
+      totalLessons: lessons?.length || 0,
+      totalLikes: lessons[0]?.likesCount,
+      totalFavorites: lessons[0]?.favoritesCount,
+      totalViews: Math.floor(Math.random() * 10000),
+
       lessons: lessons || [],
     });
 
@@ -68,8 +68,8 @@ const Profile = () => {
 
   if (loading)
     return (
-      <div >
-        <LoadingPage/>
+      <div>
+        <LoadingPage />
       </div>
     );
   if (error)
@@ -223,11 +223,15 @@ const Profile = () => {
         <StatCard
           icon={<BookOpen />}
           label="Lessons"
-          value={userData.stats.totalLessons}
+          value={userData.totalLessons}
         />
-        <StatCard icon={<Heart />} label="Likes" value="1.2K" />
-        <StatCard icon={<Star />} label="Favorites" value="340" />
-        <StatCard icon={<Eye />} label="Views" value="8.9K" />
+        <StatCard icon={<Heart />} label="Likes" value={userData.totalLikes} />
+        <StatCard
+          icon={<Star />}
+          label="Favorites"
+          value={userData.totalFavorites}
+        />
+        <StatCard icon={<Eye />} label="Views" value={userData.totalViews} />
       </motion.div>
 
       <div className="max-w-6xl mx-auto mt-12">

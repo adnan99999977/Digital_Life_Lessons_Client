@@ -11,7 +11,7 @@ const getLessonsData = async () => {
 };
 
 const PublicLessons = () => {
-  const { user, } = useCurrentUser();
+  const { user } = useCurrentUser();
 
   const {
     data: lessons,
@@ -22,11 +22,14 @@ const PublicLessons = () => {
     queryFn: getLessonsData,
   });
 
+  const sortedLessons = lessons
+    ? [...lessons].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    : [];
   // Loading states
   if (lessonsLoading) {
     return (
-      <div >
-       <LoadingPage/>
+      <div>
+        <LoadingPage />
       </div>
     );
   }
@@ -46,7 +49,7 @@ const PublicLessons = () => {
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {lessons.map((lesson) => {
+        {sortedLessons.map((lesson) => {
           const isLocked = lesson.accessLevel === "Premium" && !user?.isPremium;
 
           return (
