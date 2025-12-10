@@ -4,12 +4,13 @@ import { Trash2, Eye } from "lucide-react";
 import useCurrentUserFav from "../../hooks/useCurrentUserFav";
 import LoadingPage from "../../components/shared/LoadingPage";
 import { Link } from "react-router-dom";
+import axiosApi from "../../api/axiosInstansce";
+import Swal from "sweetalert2";
 
 const MyFavorites = () => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [toneFilter, setToneFilter] = useState("");
   const { favorites, loading, error } = useCurrentUserFav();
-
   const filteredFavorites = favorites.filter((fav) => {
     return (
       (!categoryFilter || fav.lessonCategory === categoryFilter) &&
@@ -17,9 +18,36 @@ const MyFavorites = () => {
     );
   });
 
-  const handleDeleteFav = ()=>{
-    
+  const handleDeleteFav = async (id) => {
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!"
+  });
+
+  if (result.isConfirmed) {
+    try {
+      await axiosApi.delete(`/favorites/${id}`);
+      Swal.fire({
+        title: "Deleted!",
+        text: "Your favorite lesson has been deleted.",
+        icon: "success"
+      });
+      window.location.reload(); 
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to delete favorite.",
+        icon: "error"
+      });
+    }
   }
+};
 
   if (loading) return <LoadingPage />;
 
@@ -41,9 +69,7 @@ const MyFavorites = () => {
         <h1 className="text-4xl font-extrabold text-purple-800 mb-2">
           My Favorites ⭐
         </h1>
-        <p className="text-gray-600">
-          View your saved lessons in one place.
-        </p>
+        <p className="text-gray-600">View your saved lessons in one place.</p>
       </motion.div>
 
       {/* Filters */}
@@ -95,10 +121,7 @@ const MyFavorites = () => {
               </tr>
             ) : (
               filteredFavorites.map((fav) => (
-                <tr
-                  key={fav._id}
-                  className="border-b hover:bg-purple-50"
-                >
+                <tr key={fav._id} className="border-b hover:bg-purple-50">
                   <td className="px-6 py-4">{fav.lessonTitle}</td>
                   <td className="px-6 py-4">{fav.lessonCategory}</td>
                   <td className="px-6 py-4">{fav.lessonTone}</td>
@@ -106,9 +129,13 @@ const MyFavorites = () => {
                     {new Date(fav.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 flex justify-center gap-4">
-                    <button onClick={handleDeleteFav} className="text-red-500 hover:text-red-700">
+                    <button
+                      onClick={() => handleDeleteFav(fav._id)}
+                      className="text-red-500 hover:text-red-700"
+                    >
                       <Trash2 size={20} />
                     </button>
+
                     <Link
                       to={`/public-lessons-details/${fav.lessonId}`}
                       className="text-indigo-600 hover:text-indigo-800"
