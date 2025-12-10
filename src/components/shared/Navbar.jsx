@@ -3,11 +3,15 @@ import { Link, NavLink } from "react-router-dom";
 import Logo from "../../utils/logo/Logo";
 import Button from "./Button";
 import { AuthContext } from "../../auth/AuthContext";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
 const Navbar = () => {
-  const { user, logOut } = useContext(AuthContext);
+  const { logOut } = useContext(AuthContext);
+  const { user } = useCurrentUser();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  console.log(user);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -39,7 +43,7 @@ const Navbar = () => {
     ],
   };
 
-  const currentRole = user?.displayName === "Admin Vaiya" ? "admin" : "user";
+  const currentRole = user?.userName === "Admin Vaiya" ? "admin" : "user";
 
   return (
     <div className="fixed bg-transparent backdrop-blur-md top-0 left-0 w-full z-50 shadow-lg">
@@ -150,7 +154,7 @@ const Navbar = () => {
                 className="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300 hover:border-blue-500 transition-transform hover:scale-105 shadow-sm focus:outline-none"
               >
                 <img
-                  src={user.photoURL || "/default-avatar.png"}
+                  src={user.userImage || "/default-avatar.png"}
                   alt="User Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -173,13 +177,24 @@ const Navbar = () => {
                     >
                       Profile
                     </Link>
-                    <Link
-                      to="/dashboard"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors rounded-md"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
+                    {user?.role === "admin" ? (
+                      <Link
+                        to="/admin-dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors rounded-md"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        Admin Dashboard
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors rounded-md"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
+
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors rounded-md"

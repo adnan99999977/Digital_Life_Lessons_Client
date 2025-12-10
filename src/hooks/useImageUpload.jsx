@@ -11,7 +11,7 @@ const useImageUpload = () => {
   const [fileName, setFileName] = useState("Choose a profile image");
 
   /**
-   * একটি ফাইল নেয় এবং Cloudinary-তে আপলোড করে
+   
    * @param {File} file -
    */
   const uploadFile = async (file) => {
