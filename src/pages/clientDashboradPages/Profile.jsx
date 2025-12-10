@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import LoadingPage from "../../components/shared/LoadingPage";
+import axiosApi from "../../api/axiosInstansce";
 
 const defaultUserData = {
   name: "User",
@@ -37,7 +38,8 @@ const Profile = () => {
   const [editName, setEditName] = useState(false);
   const [editPhoto, setEditPhoto] = useState(false);
   const [newName, setNewName] = useState(userData.name);
-  const [newPhoto, setNewPhoto] = useState(userData.userImage);
+  const [newPhoto, setNewPhoto] = useState(userData.photoURL);
+
   const fileInputRef = useRef(null);
   const triggerFileSelect = () => {
     fileInputRef.current.click();
@@ -57,7 +59,7 @@ const Profile = () => {
       totalLessons: lessons?.length || 0,
       totalLikes: lessons[0]?.likesCount || 0,
       totalFavorites: lessons[0]?.favoritesCount || 0,
-      totalViews: Math.floor(Math.random() * 10000),
+      totalViews: Math.floor(Math.random() * 1000),
 
       lessons: lessons || [],
     });
@@ -89,20 +91,40 @@ const Profile = () => {
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
-  const handleNameUpdate = () => {
-    setUserData({ ...userData, name: newName });
-    setEditName(false);
+  const handleNameUpdate = async () => {
+    try {
+      setUserData({ ...userData, name: newName });
+      setEditName(false);
+
+      await axiosApi.patch(`/users/${user._id}`, { userName: newName });
+      alert("Name updated successfully!");
+    } catch (err) {
+      console.error("Failed to update name:", err);
+      alert("Failed to update name");
+    }
   };
 
-  const handlePhotoUpdate = (e) => {
+  const handlePhotoUpdate = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setNewPhoto(reader.result);
-      reader.readAsDataURL(file);
-      setUserData({ ...userData, photoURL: URL.createObjectURL(file) });
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64Image = reader.result;
+
+      setNewPhoto(base64Image);
+      setUserData({ ...userData, photoURL: base64Image });
       setEditPhoto(false);
-    }
+
+      try {
+        await axiosApi.patch(`/users/${user._id}`, { userImage: base64Image });
+        alert("Photo updated successfully!");
+      } catch (err) {
+        console.error("Failed to update photo:", err);
+        alert("Failed to update photo");
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const formatDate = (date) => {
@@ -250,7 +272,7 @@ const Profile = () => {
           {sortedLessons.length > 0 ? (
             sortedLessons.map((lesson) => (
               <motion.div
-                key={lesson.id}
+                key={lesson._id}
                 whileHover={{ scale: 1.05 }}
                 className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer group"
               >
