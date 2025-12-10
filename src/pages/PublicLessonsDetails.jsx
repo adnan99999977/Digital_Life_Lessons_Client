@@ -7,6 +7,7 @@ import useCurrentUser from "../hooks/useCurrentUser";
 import LoadingPage from "../components/shared/LoadingPage";
 import { Heart, Bookmark, Eye, Flag, Share2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Swal from "sweetalert2";
 
 /* ================= API ================= */
 const getLessonDetails = async (id) => {
@@ -71,6 +72,8 @@ const PublicLessonsDetails = () => {
     }).format(new Date(date));
   };
   const [comment, setComment] = useState("");
+
+  console.log(user);
 
   // get all comment
   const fetchComments = async () => {
@@ -179,7 +182,47 @@ const PublicLessonsDetails = () => {
   };
 
   // handle report
-  const handleReport = () => alert("Reported (mock)");
+  const handleReport = async () => {
+    const { value: reason } = await Swal.fire({
+      title: "Report this lesson",
+      input: "select",
+      inputOptions: {
+        "Inappropriate Content": "Inappropriate Content",
+        "Hate Speech or Harassment": "Hate Speech or Harassment",
+        "Misleading or False Information": "Misleading or False Information",
+        "Spam or Promotional Content": "Spam or Promotional Content",
+        "Sensitive or Disturbing Content": "Sensitive or Disturbing Content",
+        Other: "Other",
+      },
+      inputPlaceholder: "Select a reason",
+      showCancelButton: true,
+    });
+
+    if (reason) {
+      try {
+        const reportData = {
+          lessonId: id,
+          reporterUserId: user._id,
+          reportUserName: user.userName,
+          reason,
+          timestamp: new Date().toISOString(),
+        };
+        await axiosApi.post("/lessonsReports", reportData);
+        Swal.fire({
+          icon: "success",
+          title: "Reported!",
+          text: "Thank you for reporting. We will review it soon.",
+        });
+      } catch (err) {
+        console.error("Failed to report lesson:", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to report this lesson.",
+        });
+      }
+    }
+  };
 
   // handle share
   const handleShare = () => alert("Shared (mock)");
@@ -339,7 +382,10 @@ const PublicLessonsDetails = () => {
               </div>
 
               {/* Report */}
-              <button className="ml-auto group flex items-center gap-1 cursor-pointer">
+              <button
+                onClick={handleReport}
+                className="ml-auto group flex items-center gap-1 cursor-pointer"
+              >
                 <Flag
                   className="
         size-5
