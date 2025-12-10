@@ -4,6 +4,8 @@ import { HiOutlineEye, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import { Link } from "react-router-dom";
 import LoadingPage from "../../components/shared/LoadingPage";
+import Swal from "sweetalert2";
+import axiosApi from "../../api/axiosInstansce";
 
 const badgeColor = (status) => {
   if (status === "Published") return "bg-green-100 text-green-800";
@@ -12,20 +14,48 @@ const badgeColor = (status) => {
 };
 
 const MyLessons = () => {
-  const [activeRow, setActiveRow] = useState(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [deleting, setDeleting] = useState(null);
-
   const { user, loading, error, lessons, formatDateTime } = useCurrentUser();
+
+  console.log(lessons);
 
   // Stats
   const stats = {
     total: lessons.length,
     public: lessons.filter((l) => l.visibility === "Public").length,
-    premium: lessons.filter((l) => l.access === "Premium").length,
+    premium: lessons.filter((l) => l.accessLevel === "Premium").length,
     reactions: lessons.reduce((acc, l) => acc + (l.likesCount || 0), 0),
     favorites: lessons.reduce((acc, l) => acc + (l.favoritesCount || 0), 0),
+  };
+
+  const handleDeleteLesson = async (id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await axiosApi.delete(`/lessons/${id}`);
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your lesson has been deleted.",
+          icon: "success",
+        });
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to delete lesson.",
+          icon: "error",
+        });
+      }
+    }
   };
 
   if (loading)
@@ -153,7 +183,7 @@ const MyLessons = () => {
                         <HiOutlineEye className="cursor-pointer text-gray-600" />
                       </motion.div>
                     </Link>
-                    <Link to={"/dashboard/update-lesson"}>
+                    <Link to={`/update-lesson`}>
                       <motion.div whileHover={{ scale: 1.2 }}>
                         <HiOutlinePencil className="cursor-pointer text-indigo-600" />
                       </motion.div>
@@ -161,10 +191,7 @@ const MyLessons = () => {
                     <motion.div whileHover={{ scale: 1.2 }}>
                       <HiOutlineTrash
                         className="cursor-pointer text-red-600"
-                        onClick={() => {
-                          setConfirmOpen(true);
-                          setDeleting(lesson.id);
-                        }}
+                        onClick={() => handleDeleteLesson(lesson._id)}
                       />
                     </motion.div>
                   </td>
@@ -174,78 +201,6 @@ const MyLessons = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Delete Modal */}
-      <AnimatePresence>
-        {confirmOpen && (
-          <motion.div className="fixed inset-0 flex items-center justify-center z-50">
-            <div
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setConfirmOpen(false)}
-            />
-            <motion.div
-              className="relative bg-white rounded-2xl p-4 sm:p-6 shadow-xl max-w-md w-full"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-            >
-              <h3 className="text-base sm:text-lg font-semibold">
-                Delete Lesson?
-              </h3>
-              <p className="mt-2 text-gray-500 text-xs sm:text-sm">
-                This action will permanently remove the lesson.
-              </p>
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-100 rounded-md text-xs sm:text-sm"
-                  onClick={() => setConfirmOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-3 sm:px-4 py-1 sm:py-2 bg-red-600 text-white rounded-md text-xs sm:text-sm"
-                  onClick={() => handleDelete(deleting)}
-                >
-                  Delete
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Edit Modal */}
-      <AnimatePresence>
-        {editing !== null && (
-          <motion.div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="absolute inset-0 bg-black/40" onClick={closeEdit} />
-            <motion.div
-              className="relative bg-white rounded-2xl p-4 sm:p-6 shadow-xl max-w-md w-full"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-            >
-              <h3 className="text-base sm:text-lg font-semibold">
-                Edit Lesson (Static)
-              </h3>
-              <p className="mt-2 text-gray-500 text-xs sm:text-sm">
-                Form pre-filled with lesson info (static).
-              </p>
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-100 rounded-md text-xs sm:text-sm"
-                  onClick={closeEdit}
-                >
-                  Close
-                </button>
-                <button className="px-3 sm:px-4 py-1 sm:py-2 bg-indigo-600 text-white rounded-md text-xs sm:text-sm">
-                  Save
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

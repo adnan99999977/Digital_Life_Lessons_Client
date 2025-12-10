@@ -98,6 +98,7 @@ const PublicLessonsDetails = () => {
     addCommentMutation.mutate(data);
   };
 
+  // all mutations
   const queryClient = useQueryClient();
   const addCommentMutation = useMutation({
     mutationFn: (commentData) => axiosApi.post("/comments", commentData),
@@ -106,7 +107,17 @@ const PublicLessonsDetails = () => {
       queryClient.invalidateQueries(["comments", id]);
     },
   });
-
+  const likeMutation = useMutation({
+    mutationFn: (lessonId) => axiosApi.patch(`/lessons/${lessonId}/like`),
+    onSuccess: () => {
+      // refetch lesson to update likes count
+      queryClient.invalidateQueries(["lesson", id]);
+    },
+    onError: (err) => {
+      console.error("Failed to like lesson:", err);
+      alert("Failed to like lesson");
+    },
+  });
   /* ================= FETCH LESSON ================= */
   const {
     data: lesson,
@@ -138,22 +149,16 @@ const PublicLessonsDetails = () => {
   const isLocked = lesson.accessLevel === "Free" && !user.isPremium;
 
   /* ================= STATIC ENGAGEMENT ================= */
-  const likesCount = lesson.likesCount || 1200;
   const favoritesCount = lesson.favoritesCount || 342;
   const viewsCount = lesson.viewsCount || Math.floor(Math.random() * 10000);
 
   /* ================= INTERACTION HANDLERS ================= */
-  // handle like
-  const handleLike = () => alert("Like toggled (mock)");
-
-
-
   // favorite item handle
   const handleFavorite = async () => {
     try {
       const data = {
         userId: user._id,
-        userEmail:user.email,
+        userEmail: user.email,
         lessonId: id,
         lessonTitle: lesson.title,
         lessonCategory: lesson.category,
@@ -288,17 +293,21 @@ const PublicLessonsDetails = () => {
             {/* inspiration key */}
             <div className="flex flex-wrap items-center gap-5 pt-4 text-slate-500">
               {/* Like */}
-              <button className="group flex items-center gap-1 cursor-pointer">
+              {/* Like */}
+              <button
+                onClick={() => likeMutation.mutate(id)}
+                className="group flex items-center gap-1 cursor-pointer"
+              >
                 <Heart
                   className="
-        size-6
-        transition-all duration-300
-        group-hover:text-red-500
-        group-hover:fill-red-500/30
-        group-hover:scale-110
-      "
+      size-6
+      transition-all duration-300
+      group-hover:text-red-500
+      group-hover:fill-red-500/30
+      group-hover:scale-110
+    "
                 />
-                <span className="text-sm">{likesCount}</span>
+                <span className="text-sm">{lesson.likesCount}</span>
               </button>
 
               {/* Favorite */}

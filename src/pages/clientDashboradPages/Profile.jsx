@@ -55,8 +55,8 @@ const Profile = () => {
       joinedDate: user.createdAt ? new Date(user.createdAt) : new Date(),
 
       totalLessons: lessons?.length || 0,
-      totalLikes: lessons[0]?.likesCount,
-      totalFavorites: lessons[0]?.favoritesCount,
+      totalLikes: lessons[0]?.likesCount || 0,
+      totalFavorites: lessons[0]?.favoritesCount || 0,
       totalViews: Math.floor(Math.random() * 10000),
 
       lessons: lessons || [],

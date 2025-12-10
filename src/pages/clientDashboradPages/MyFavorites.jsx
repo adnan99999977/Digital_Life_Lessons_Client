@@ -17,7 +17,7 @@ const MyFavorites = () => {
       (!toneFilter || fav.lessonTone === toneFilter)
     );
   });
-
+   
   const handleDeleteFav = async (id) => {
   const result = await Swal.fire({
     title: "Are you sure?",

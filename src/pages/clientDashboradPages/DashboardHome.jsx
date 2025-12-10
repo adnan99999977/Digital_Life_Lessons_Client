@@ -19,10 +19,10 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { AuthContext } from "../../auth/AuthContext";
 import LoadingPage from "../../components/shared/LoadingPage";
-import useCurrentUser from "../../hooks/useCurrentUser";
 import { Link } from "react-router-dom";
+import useCurrentUser from "../../hooks/useCurrentUser";
+import { AuthContext } from "../../auth/AuthContext";
 
 ChartJS.register(
   CategoryScale,
@@ -35,9 +35,8 @@ ChartJS.register(
 
 const DashboardHome = () => {
   const [chartView, setChartView] = useState("weekly");
-  const { loading, error, lessons, formatDateTime } = useCurrentUser();
-
-  console.log("lesson", lessons);
+  const { loading, lessons } = useCurrentUser();
+  const { user } = useContext(AuthContext);
 
   const stats = {
     totalLessons: lessons.length,
@@ -120,7 +119,7 @@ const DashboardHome = () => {
         className="max-w-6xl mx-auto mb-10"
       >
         <h1 className="text-4xl font-extrabold text-purple-800">
-          Welcome Back, {lessons[0].creatorName}! 🚀
+          Welcome Back,{lessons[0]?.creatorName || user.displayName}! 🚀
         </h1>
         <p className="text-gray-600 mt-2">
           Track your lessons, favorites, premium content, and growth.
@@ -143,25 +142,27 @@ const DashboardHome = () => {
         <StatCard
           icon={<Heart size={20} />}
           label="Favorites"
-          value={lessons[0].favoritesCount}
+          value={lessons[0]?.favoritesCount || 0}
           color="from-pink-500 to-rose-500"
         />
 
         {/* Quick Action Cards */}
-        <Link to={'/dashboard/add-lesson'}>
-        <QuickAction
-          icon={<PlusCircle size={28} />}
-          title="Create New"
-          subtitle="Add a lesson"
-          bgColor="from-purple-400 to-purple-600"
-        /></Link>
-        <Link to={'/dashboard/my-favorite'}>
-        <QuickAction
-          icon={<Bookmark size={28} />}
-          title="View Favorites"
-          subtitle="Saved lessons"
-          bgColor="from-pink-400 to-rose-500"
-        /></Link>
+        <Link to={"/dashboard/add-lesson"}>
+          <QuickAction
+            icon={<PlusCircle size={28} />}
+            title="Create New"
+            subtitle="Add a lesson"
+            bgColor="from-purple-400 to-purple-600"
+          />
+        </Link>
+        <Link to={"/dashboard/my-favorite"}>
+          <QuickAction
+            icon={<Bookmark size={28} />}
+            title="View Favorites"
+            subtitle="Saved lessons"
+            bgColor="from-pink-400 to-rose-500"
+          />
+        </Link>
       </motion.div>
 
       {/* Recent Lessons */}
@@ -186,10 +187,10 @@ const DashboardHome = () => {
               className="bg-white rounded-2xl shadow-lg p-5 cursor-pointer hover:shadow-2xl hover:bg-purple-50 transition-all duration-300"
             >
               <h3 className="font-semibold text-lg text-purple-700 mb-1">
-                {lesson.title}
+                {lesson?.title}
               </h3>
               <span className="inline-block text-xs px-3 py-1 rounded-full bg-purple-100 text-purple-700">
-                {lesson.category}
+                {lesson?.category}
               </span>
             </motion.div>
           ))}
@@ -207,12 +208,12 @@ const DashboardHome = () => {
           <div className="flex gap-4">
             <MiniStat
               label="Total Lessons"
-              value={lessons.length}
+              value={lessons?.length}
               color="bg-indigo-500"
             />
             <MiniStat
               label="Favorites"
-              value={lessons[0].favoritesCount}
+              value={lessons[0]?.favoritesCount}
               color="bg-pink-500"
             />
           </div>
