@@ -31,8 +31,6 @@ const Login = () => {
       role: "user",
       plan: "Free",
       isPremium: false,
-      favorites: [],
-      lessonsCreated: [],
       provider: "google",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -52,6 +50,8 @@ const Login = () => {
       const response = await axiosApi.post("/login", {
         email: data.email,
         password: data.password,
+       
+
       });
 
       setMessage(response.data.message);

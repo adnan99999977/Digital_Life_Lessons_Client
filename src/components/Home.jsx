@@ -6,7 +6,7 @@ import { WhyLearningMatters } from "./WhyLearningMatters";
 
 const Home = () => {
   return (
-    <div className="space-y-16">
+    <div className="space-y-16 ">
       <HeroSlider />
       <FeaturedLessons />
       <WhyLearningMatters />

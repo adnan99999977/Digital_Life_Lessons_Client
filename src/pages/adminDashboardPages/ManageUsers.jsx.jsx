@@ -1,46 +1,70 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axiosApi from "../../api/axiosInstansce";
-import { AuthContext } from "../../auth/AuthContext";
 import LoadingPage from "../../components/shared/LoadingPage";
+import useDbData from "../../hooks/useDbData";
 
-
+const PROTECTED_ADMIN_EMAIL = "adminadnan@gmail.com";
 
 const ManageUsers = () => {
-  const [users, setUsers] = useState([]);
-  const {loading} = useContext(AuthContext)
-  
+  const { dbUser, loading } = useDbData();
+  const [localUsers, setLocalUsers] = useState([]);
 
+  // sync hook data to local state
   useEffect(() => {
-    const getUsers = async () => {
-      const users = await axiosApi.get("/users");
-      setUsers(users.data)
-    };
-    getUsers()
-  }, []);
+    if (dbUser) setLocalUsers(Array.isArray(dbUser) ? dbUser : [dbUser]);
+  }, [dbUser]);
 
   // Toggle user role
-  const toggleRole = (id) => {
-    setUsers(
-      users.map((user) =>
-        user.id === id
-          ? { ...user, role: user.role === "User" ? "Admin" : "User" }
-          : user
-      )
-    );
-  };
+  const toggleRole = async (id) => {
+    const user = localUsers.find((u) => u._id === id);
+    if (!user) return;
 
-  // Delete user
-  const deleteUser = (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((user) => user.id !== id));
+    // prevent role change for protected admin
+    if (user.email === PROTECTED_ADMIN_EMAIL) {
+      alert("Cannot change role of protected admin!");
+      return;
+    }
+
+    const newRole = user.role === "User" ? "Admin" : "User";
+
+    try {
+      await axiosApi.patch(`/users/${id}`, { role: newRole });
+      setLocalUsers(
+        localUsers.map((u) =>
+          u._id === id ? { ...u, role: newRole } : u
+        )
+      );
+      alert(`User role updated to ${newRole}`);
+    } catch (err) {
+      console.error("Failed to update role:", err);
+      alert("Failed to update role");
     }
   };
 
-  if(loading){
-    <div>
-      <LoadingPage/>
-    </div>
-  }
+  // Delete user
+  const deleteUser = async (id) => {
+    const user = localUsers.find((u) => u._id === id);
+    if (!user) return;
+
+    // prevent delete for protected admin
+    if (user.email === PROTECTED_ADMIN_EMAIL) {
+      alert("Cannot delete protected admin!");
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+
+    try {
+      await axiosApi.delete(`/users/${id}`);
+      setLocalUsers(localUsers.filter((u) => u._id !== id));
+      alert("User deleted successfully");
+    } catch (err) {
+      console.error("Failed to delete user:", err);
+      alert("Failed to delete user");
+    }
+  };
+
+  if (loading) return <LoadingPage />;
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
@@ -71,46 +95,51 @@ const ManageUsers = () => {
           </thead>
 
           <tbody className="divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4">{user.name}</td>
-                <td className="px-6 py-4">{user.email}</td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-white font-medium text-sm ${
-                      user.role === "Admin"
-                        ? "bg-yellow-500 shadow"
-                        : "bg-blue-500 shadow"
-                    }`}
-                  >
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4">{user.lessons}</td>
-                <td className="px-6 py-4 text-center space-x-2">
-                  <button
-                    className={`px-3 py-1 rounded-lg text-white font-medium text-sm transition-colors duration-300 ${
-                      user.role === "Admin"
-                        ? "bg-indigo-500 hover:bg-indigo-600"
-                        : "bg-green-500 hover:bg-green-600"
-                    }`}
-                    onClick={() => toggleRole(user.id)}
-                  >
-                    {user.role === "Admin"
-                      ? "Demote to User"
-                      : "Promote to Admin"}
-                  </button>
+            {localUsers.length > 0 ? (
+              localUsers.map((user) => (
+                <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">{user.userName}</td>
+                  <td className="px-6 py-4">{user.email}</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-3 py-1 rounded-full text-white font-medium text-sm ${
+                        user.role === "Admin"
+                          ? "bg-yellow-500 shadow"
+                          : "bg-blue-500 shadow"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">{user.lessons || 0}</td>
+                  <td className="px-6 py-4 text-center space-x-2">
+                    <button
+                      disabled={user.email === PROTECTED_ADMIN_EMAIL}
+                      className={`px-3 py-1 rounded-lg text-white font-medium text-sm transition-colors duration-300 ${
+                        user.role === "Admin"
+                          ? "bg-indigo-500 hover:bg-indigo-600"
+                          : "bg-green-500 hover:bg-green-600"
+                      } ${user.email === PROTECTED_ADMIN_EMAIL ? "opacity-50 cursor-not-allowed" : ""}`}
+                      onClick={() => toggleRole(user._id)}
+                    >
+                      {user.role === "Admin"
+                        ? "Demote to User"
+                        : "Promote to Admin"}
+                    </button>
 
-                  <button
-                    className="px-3 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 font-medium text-sm transition-colors duration-300"
-                    onClick={() => deleteUser(user.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && (
+                    <button
+                      disabled={user.email === PROTECTED_ADMIN_EMAIL}
+                      className={`px-3 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 font-medium text-sm transition-colors duration-300 ${
+                        user.email === PROTECTED_ADMIN_EMAIL ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      onClick={() => deleteUser(user._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
                 <td colSpan={5} className="text-center py-6 text-gray-500">
                   No users found.

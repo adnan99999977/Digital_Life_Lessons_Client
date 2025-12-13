@@ -1,179 +1,260 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Bar } from "react-chartjs-2";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
+  User,
+  Star,
+  Heart,
+  BookOpen,
+  Crown,
+  Eye,
+  Calendar,
+  Mail,
+  Edit2,
+} from "lucide-react";
 import useCurrentUser from "../../hooks/useCurrentUser";
+import useDbData from "../../hooks/useDbData";
 import LoadingPage from "../../components/shared/LoadingPage";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+import axiosApi from "../../api/axiosInstansce";
 
 const AdminProfile = () => {
-  const { user, loading, error, lessons = [] } = useCurrentUser();
+  const { user, loading, error } = useCurrentUser();
+  const { dbUser, reports, lessons } = useDbData();
 
-  const [name, setName] = useState("");
-  const [photo, setPhoto] = useState('');
+  const [userData, setUserData] = useState({
+    name: "Admin",
+    email: "admin@example.com",
+    photoURL: "/default-avatar.png",
+    role: "Admin",
+    stats: {
+      totalUsers: 0,
+      totalLessons: 0,
+      flaggedLessons: 0,
+    },
+  });
 
-  const email = user?.email || "admin@example.com";
-  const role = "Admin";
+  const [editName, setEditName] = useState(false);
+  const [newName, setNewName] = useState(userData.name);
+  const [newPhoto, setNewPhoto] = useState(userData.photoURL);
+  const fileInputRef = useRef(null);
+  const triggerFileSelect = () => fileInputRef.current.click();
 
   useEffect(() => {
-    if (user?.name) {
-      setName(user.name);
-    }
-  }, [user]);
+    if (!user) return;
 
-  useEffect(() => {
-    if (user?.userImage) {
-      setPhoto(user.userImage);
-    }
-  }, [user]);
-
-  // Static metrics (later API driven করা যাবে)
-  const totalUsers = 256;
-  const totalLessons = lessons.length || 128;
-  const flaggedLessons = 5;
-
-  // Static activity chart
-  const activityData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-    datasets: [
-      {
-        label: "Lessons Moderated",
-        data: [12, 19, 15, 10, 20, 18],
-        backgroundColor: "#3B82F6",
+    setUserData({
+      name: user.userName || "Admin",
+      email: user.email,
+      photoURL: user.userImage || "/default-avatar.png",
+      role: "Admin",
+      stats: {
+        totalUsers: dbUser?.length || 0,
+        totalLessons: lessons?.length || 0,
+        flaggedLessons: reports?.length || 0,
       },
-      {
-        label: "Actions Taken",
-        data: [5, 7, 6, 3, 10, 4],
-        backgroundColor: "#60A5FA",
-      },
-    ],
+    });
+
+    setNewName(user.userName || "Admin");
+    setNewPhoto(user.userImage || "/default-avatar.png");
+  }, [user, dbUser, lessons, reports]);
+
+  if (loading) return <LoadingPage />;
+  if (error)
+    return (
+      <div className="text-center py-20 text-red-500">
+        Failed to load admin data
+      </div>
+    );
+
+  const handleNameUpdate = async () => {
+    try {
+      setUserData({ ...userData, name: newName });
+      setEditName(false);
+
+      await axiosApi.patch(`/users/${user._id}`, { userName: newName });
+      alert("Name updated successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update name");
+    }
   };
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoUpdate = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onloadend = () => setPhoto(reader.result);
+    reader.onload = async () => {
+      const base64Image = reader.result;
+      setNewPhoto(base64Image);
+      setUserData({ ...userData, photoURL: base64Image });
+
+      try {
+        await axiosApi.patch(`/users/${user._id}`, { userImage: base64Image });
+        alert("Photo updated successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to update photo");
+      }
+    };
     reader.readAsDataURL(file);
   };
 
-  // ✅ Loading & Error handling
-  if (loading) {
-    return <div >
-        <LoadingPage/>
-      </div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-20 text-red-500">Failed to load profile</div>;
-  }
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8">
-      <h1 className="text-4xl font-bold text-gray-800 mb-4">
-        Admin Profile
-      </h1>
-
-      {/* Top Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <motion.div
-          className="bg-white p-6 rounded-2xl shadow hover:shadow-xl transition-shadow cursor-pointer"
-          whileHover={{ scale: 1.03 }}
-        >
-          <h2 className="text-lg font-semibold text-gray-700">Total Users</h2>
-          <p className="text-3xl font-bold text-blue-600 mt-2">{totalUsers}</p>
-        </motion.div>
-
-        <motion.div
-          className="bg-white p-6 rounded-2xl shadow hover:shadow-xl transition-shadow cursor-pointer"
-          whileHover={{ scale: 1.03 }}
-        >
-          <h2 className="text-lg font-semibold text-gray-700">Total Lessons</h2>
-          <p className="text-3xl font-bold text-blue-600 mt-2">{totalLessons}</p>
-        </motion.div>
-
-        <motion.div
-          className="bg-white p-6 rounded-2xl shadow hover:shadow-xl transition-shadow cursor-pointer"
-          whileHover={{ scale: 1.03 }}
-        >
-          <h2 className="text-lg font-semibold text-gray-700">Flagged Lessons</h2>
-          <p className="text-3xl font-bold text-red-500 mt-2">{flaggedLessons}</p>
-        </motion.div>
-      </div>
-
-      {/* Profile + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Card */}
-        <motion.div
-          className="bg-white p-6 rounded-2xl shadow flex flex-col items-center gap-4"
-          whileHover={{ scale: 1.02 }}
-        >
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Profile Card */}
+      <motion.div
+        initial={{ opacity: 0, y: -40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl p-6 flex flex-col md:flex-row items-center gap-8"
+      >
+        {/* Avatar */}
+        <div className="relative group w-40 h-40 mx-auto">
           <img
-            src={photo}
-            alt="Admin Avatar"
-            className="w-36 h-36 rounded-full border-4 border-blue-500 shadow-md object-cover"
+            src={newPhoto}
+            alt="Admin"
+            className="w-full h-full rounded-full border-4 border-blue-500 shadow-lg object-cover"
           />
-
-          <label className="mt-2 cursor-pointer text-blue-600 font-medium hover:underline">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handlePhotoChange}
-            />
-            Update Photo
-          </label>
-
+          <div
+            onClick={triggerFileSelect}
+            className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+          >
+            <Edit2 className="text-white" size={24} />
+          </div>
           <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-3 w-full text-center border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handlePhotoUpdate}
           />
+        </div>
 
-          <p className="text-gray-500">{email}</p>
+        {/* User Info */}
+        <div className="flex-1 text-center md:text-left">
+          <div className="flex items-center justify-center md:justify-start gap-2">
+            {editName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="rounded-xl border p-2"
+                />
+                <button
+                  onClick={handleNameUpdate}
+                  className="bg-blue-600 text-white px-3 py-1 rounded-xl"
+                >
+                  Save
+                </button>
+              </div>
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-gray-800">
+                  {userData.name}
+                </h1>
+                <button onClick={() => setEditName(true)}>
+                  <Edit2 size={16} className="text-blue-600" />
+                </button>
+              </>
+            )}
+            <span className="flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2 py-1 text-xs rounded-full">
+              <Crown size={14} /> Admin
+            </span>
+          </div>
 
-          <span className="mt-2 px-4 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
-            {role}
-          </span>
-        </motion.div>
+          <p className="text-gray-500 flex items-center justify-center md:justify-start gap-1 mt-1">
+            <Mail size={14} /> {userData.email}
+          </p>
 
-        {/* Activity Summary */}
+          <div className="flex flex-wrap justify-center md:justify-start gap-6 mt-4 text-gray-600">
+            <span className="flex items-center gap-1">
+              <User size={16} /> Role: {userData.role}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Stats Cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-6 mt-8"
+      >
+        <StatCard
+          icon={<User />}
+          label="Total Users"
+          value={userData.stats.totalUsers}
+        />
+        <StatCard
+          icon={<BookOpen />}
+          label="Total Lessons"
+          value={userData.stats.totalLessons}
+        />
+        <StatCard
+          icon={<Star />}
+          label="Flagged Lessons"
+          value={userData.stats.flaggedLessons}
+        />
+      </motion.div>
+
+      {/* Recent Lessons */}
+      <div className="max-w-5xl mx-auto mt-12">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+          Recent Lessons
+        </h2>
         <motion.div
-          className="lg:col-span-2 bg-white p-6 rounded-2xl shadow"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          transition={{ delay: 0.4 }}
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">
-            Activity Summary
-          </h2>
-          <div className="h-64">
-            <Bar
-              data={activityData}
-              options={{
-                responsive: true,
-                plugins: {
-                  legend: { position: "top" },
-                  title: { display: true, text: "Activity Overview" },
-                },
-              }}
-            />
-          </div>
+          {lessons && lessons.length > 0 ? (
+            lessons.map((lesson) => (
+              <motion.div
+                key={lesson._id}
+                whileHover={{ scale: 1.05 }}
+                className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer group"
+              >
+                <img
+                  src={lesson.userImage}
+                  alt={lesson.title}
+                  className="w-full h-44 object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg text-gray-800 mb-1">
+                    {lesson.title}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    {lesson.category} • {lesson.emotionalTone}
+                  </p>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <p className="col-span-3 text-center py-10 text-gray-500">
+              No lessons added yet!
+            </p>
+          )}
         </motion.div>
       </div>
     </div>
   );
 };
+
+const StatCard = ({ icon, label, value }) => (
+  <div className="bg-white rounded-xl shadow-md p-5 text-center hover:shadow-lg transition">
+    <div className="flex justify-center text-blue-600 mb-2">{icon}</div>
+    <p className="text-2xl font-bold text-gray-800">{value}</p>
+    <p className="text-sm text-gray-500">{label}</p>
+  </div>
+);
 
 export default AdminProfile;

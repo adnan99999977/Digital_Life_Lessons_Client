@@ -76,6 +76,9 @@ const AddLesson = () => {
       likesCount: 0,
       favoritesCount: 0,
       viewsCount: 0,
+      reportsCount: 0,
+      featured: false,
+      reviewStatus: "pending",
       createdAt: new Date(),
       updatedAt: new Date(),
     };

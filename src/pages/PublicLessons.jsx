@@ -22,9 +22,15 @@ const PublicLessons = () => {
     queryFn: getLessonsData,
   });
 
+  console.log(lessons);
+
   const sortedLessons = lessons
     ? [...lessons].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     : [];
+
+  const filteredLessons = sortedLessons.filter(
+    (lesson) => lesson.visibility !== "Private"
+  );
   // Loading states
   if (lessonsLoading) {
     return (
@@ -49,7 +55,7 @@ const PublicLessons = () => {
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {sortedLessons.map((lesson) => {
+        {filteredLessons.map((lesson) => {
           const isLocked = lesson.accessLevel === "Premium" && !user?.isPremium;
 
           return (

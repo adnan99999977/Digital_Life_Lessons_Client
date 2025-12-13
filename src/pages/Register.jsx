@@ -7,9 +7,8 @@ import { useForm } from "react-hook-form";
 import axiosApi from "../api/axiosInstansce";
 import useImageUpload from "../hooks/useImageUpload";
 
-
 const Register = () => {
-const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();
+  const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();
 
   const {
     register,
@@ -41,8 +40,6 @@ const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();
         role: "user",
         plan: "Free",
         isPremium: false,
-        favorites: [],
-        lessonsCreated: [],
         provider: "google",
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -75,8 +72,6 @@ const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();
         role: "user",
         plan: "Free",
         isPremium: false,
-        favorites: [],
-        lessonsCreated: [],
         createdAt: new Date(),
         updatedAt: new Date(),
       };

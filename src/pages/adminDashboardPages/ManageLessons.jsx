@@ -1,76 +1,40 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import LoadingPage from "../../components/shared/LoadingPage";
-import { AuthContext } from "../../auth/AuthContext";
-
-const sampleLessons = [
-  {
-    id: 1,
-    title: "React Basics",
-    creator: "John Doe",
-    category: "Frontend",
-    visibility: "Public",
-    flags: 2,
-    featured: false,
-    reviewed: false,
-    createdAt: "2025-12-01",
-  },
-  {
-    id: 2,
-    title: "Node.js Advanced",
-    creator: "Alice",
-    category: "Backend",
-    visibility: "Private",
-    flags: 0,
-    featured: true,
-    reviewed: true,
-    createdAt: "2025-12-05",
-  },
-  {
-    id: 3,
-    title: "Mindset Growth",
-    creator: "Bob",
-    category: "Mindset",
-    visibility: "Public",
-    flags: 1,
-    featured: false,
-    reviewed: false,
-    createdAt: "2025-12-06",
-  },
-  {
-    id: 4,
-    title: "Mistakes Learned",
-    creator: "Carol",
-    category: "Mistakes Learned",
-    visibility: "Public",
-    flags: 3,
-    featured: false,
-    reviewed: false,
-    createdAt: "2025-12-07",
-  },
-];
+import useDbData from "../../hooks/useDbData";
 
 const ManageLessons = () => {
-  const [lessons, setLessons] = useState(sampleLessons);
+  const { lessons: dbLessons, reports, loading } = useDbData();
+
+  const [lessons, setLessons] = useState([]);
   const [filterCategory, setFilterCategory] = useState("");
   const [filterVisibility, setFilterVisibility] = useState("");
   const [filterFlagged, setFilterFlagged] = useState(false);
   const [sortOption, setSortOption] = useState("newest");
-    const {loading} = useContext(AuthContext)
-  
+
+  // On DB lessons change, add dynamic flag count
+  useEffect(() => {
+    if (dbLessons) {
+      const lessonsWithFlags = dbLessons.map((lesson) => {
+        const lessonReports = reports.filter((r) => r.lessonId === lesson._id);
+        return { ...lesson, flags: reports.length };
+      });
+      setLessons(lessonsWithFlags);
+    }
+  }, [dbLessons, reports]);
 
   // DELETE LESSON
   const deleteLesson = (id) => {
     if (window.confirm("Are you sure you want to delete this lesson?")) {
-      setLessons(lessons.filter((lesson) => lesson.id !== id));
+      setLessons(lessons.filter((lesson) => lesson._id !== id));
     }
   };
 
   // TOGGLE FEATURE
-  const toggleFeatured = (id) => {
+   const toggleFeatured = (id) => {
     setLessons(
       lessons.map((lesson) =>
-        lesson.id === id ? { ...lesson, featured: !lesson.featured } : lesson
+        lesson._id === id ? { ...lesson, featured: !lesson.featured } : lesson
       )
     );
   };
@@ -79,19 +43,15 @@ const ManageLessons = () => {
   const markReviewed = (id) => {
     setLessons(
       lessons.map((lesson) =>
-        lesson.id === id ? { ...lesson, reviewed: true } : lesson
+        lesson._id === id ? { ...lesson, reviewed: true } : lesson
       )
     );
   };
 
   // FILTER & SORT
   const filteredLessons = lessons
-    .filter((lesson) =>
-      filterCategory ? lesson.category === filterCategory : true
-    )
-    .filter((lesson) =>
-      filterVisibility ? lesson.visibility === filterVisibility : true
-    )
+    .filter((lesson) => (filterCategory ? lesson.category === filterCategory : true))
+    .filter((lesson) => (filterVisibility ? lesson.visibility === filterVisibility : true))
     .filter((lesson) => (filterFlagged ? lesson.flags > 0 : true))
     .sort((a, b) => {
       if (sortOption === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
@@ -104,16 +64,10 @@ const ManageLessons = () => {
   const stats = {
     publicLessons: lessons.filter((l) => l.visibility === "Public").length,
     privateLessons: lessons.filter((l) => l.visibility === "Private").length,
-    flaggedLessons: lessons.filter((l) => l.flags > 0).length,
+    flaggedLessons: lessons.length,
   };
 
-  if(loading){
-    return (
-      <div>
-        <LoadingPage/>
-      </div>
-    )
-  }
+  if (loading) return <LoadingPage />;
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 min-h-screen">
@@ -174,7 +128,7 @@ const ManageLessons = () => {
       <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredLessons.map((lesson) => (
           <motion.div
-            key={lesson.id}
+            key={lesson._id}
             className="bg-white shadow-lg rounded-xl p-6 flex flex-col justify-between hover:shadow-2xl transition-shadow"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -182,11 +136,11 @@ const ManageLessons = () => {
           >
             <div className="space-y-2">
               <h2 className="text-xl font-semibold">{lesson.title}</h2>
-              <p>Creator: <span className="font-medium">{lesson.creator}</span></p>
+              <p>Creator: <span className="font-medium">{lesson.creatorName}</span></p>
               <p>Category: <span className="font-medium">{lesson.category}</span></p>
               <p>Visibility: <span className="font-medium">{lesson.visibility}</span></p>
               <p>Flags: <span className="font-medium">{lesson.flags}</span></p>
-              <p>Created: <span className="font-medium">{lesson.createdAt}</span></p>
+              <p>Created: <span className="font-medium">{new Date(lesson.createdAt).toLocaleDateString()}</span></p>
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -194,7 +148,7 @@ const ManageLessons = () => {
                 className={`px-4 py-2 rounded-lg text-white font-medium transition-colors ${
                   lesson.featured ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-500 hover:bg-blue-600"
                 }`}
-                onClick={() => toggleFeatured(lesson.id)}
+                onClick={() => toggleFeatured(lesson._id)}
               >
                 {lesson.featured ? "Unfeature" : "Feature"}
               </button>
@@ -203,7 +157,7 @@ const ManageLessons = () => {
                 className={`px-4 py-2 rounded-lg text-white font-medium transition-colors ${
                   lesson.reviewed ? "bg-green-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600"
                 }`}
-                onClick={() => markReviewed(lesson.id)}
+                onClick={() => markReviewed(lesson._id)}
                 disabled={lesson.reviewed}
               >
                 {lesson.reviewed ? "Reviewed" : "Mark Reviewed"}
@@ -211,7 +165,7 @@ const ManageLessons = () => {
 
               <button
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-                onClick={() => deleteLesson(lesson.id)}
+                onClick={() => deleteLesson(lesson._id)}
               >
                 Delete
               </button>
@@ -223,7 +177,6 @@ const ManageLessons = () => {
   );
 };
 
-/* STAT CARD COMPONENT */
 const StatCard = ({ label, value, color }) => (
   <div className={`p-4 rounded-xl shadow-md text-center font-medium ${color}`}>
     <p className="text-gray-800 text-lg">{label}</p>

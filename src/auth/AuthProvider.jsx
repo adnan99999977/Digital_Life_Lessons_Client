@@ -50,6 +50,7 @@ const AuthProvider = ({ children }) => {
   //  Sign Out
   const logOut = async () => {
     setLoading(true);
+    setUser(null);
     try {
       return await signOut(auth);
     } finally {

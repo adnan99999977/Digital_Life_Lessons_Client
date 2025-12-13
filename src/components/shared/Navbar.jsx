@@ -3,15 +3,11 @@ import { Link, NavLink } from "react-router-dom";
 import Logo from "../../utils/logo/Logo";
 import Button from "./Button";
 import { AuthContext } from "../../auth/AuthContext";
-import useCurrentUser from "../../hooks/useCurrentUser";
 
 const Navbar = () => {
-  const { logOut } = useContext(AuthContext);
-  const { user } = useCurrentUser();
+  const { logOut, user } = useContext(AuthContext);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
-  console.log(user);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -42,12 +38,11 @@ const Navbar = () => {
       { name: "Dashboard", path: "/dashboard" },
     ],
   };
-
-  const currentRole = user?.userName === "Admin Vaiya" ? "admin" : "user";
+  const currentRole = user?.role === "admin" ? "admin" : "user";
 
   return (
-    <div className="fixed bg-transparent backdrop-blur-md top-0 left-0 w-full z-50 shadow-lg">
-      <div className="navbar md:px-8 px-3 py-2 transition-all duration-300 ease-in-out">
+    <div className=" md:w-[1200px] fixed top-2 md:left-7 border border-gray-300 rounded-full bg-transparent backdrop-blur-md z-100 mx-auto  shadow-2xl">
+      <div className="navbar md:px-8 px-3 transition-all duration-300 ease-in-out">
         {/* LEFT */}
         <div className="navbar-start flex items-center gap-2">
           {/* Mobile Menu */}
@@ -100,11 +95,9 @@ const Navbar = () => {
               })}
             </ul>
           </div>
-
           {/* Logo */}
           <Logo />
         </div>
-
         {/* CENTER */}
         <div className="navbar-center hidden lg:flex">
           <ul className="flex gap-6">
@@ -154,7 +147,7 @@ const Navbar = () => {
                 className="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300 hover:border-blue-500 transition-transform hover:scale-105 shadow-sm focus:outline-none"
               >
                 <img
-                  src={user.userImage || "/default-avatar.png"}
+                  src={user?.photoURL || "/default-avatar.png"}
                   alt="User Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -165,7 +158,7 @@ const Navbar = () => {
                 <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md z-50 border border-gray-200 animate-fade-in">
                   <div className="px-4 py-3 border-b">
                     <p className="text-sm font-medium text-gray-700">
-                      {user.name}
+                      {user.displayName}
                     </p>
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>

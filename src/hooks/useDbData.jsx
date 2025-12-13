@@ -7,7 +7,16 @@ const useDbData = () => {
   const [dbUser, setDbUser] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+   const formatDateTime = (date) => {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(new Date(date));
+  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -16,6 +25,8 @@ const useDbData = () => {
         // fetching user
         const userRes = await axiosApi.get("/users");
         setDbUser(userRes.data);
+
+        
 
         // Fetch lessons for this user
         const lessonsRes = await axiosApi.get("/lessons");
@@ -38,8 +49,8 @@ const useDbData = () => {
 
     fetchData();
   }, [currentUser]);
-
-  return { dbUser, lessons, reports, loading };
+    
+  return { dbUser, lessons, reports, loading,formatDateTime };
 };
 
 export default useDbData;

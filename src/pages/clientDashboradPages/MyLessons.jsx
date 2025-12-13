@@ -6,14 +6,10 @@ import LoadingPage from "../../components/shared/LoadingPage";
 import Swal from "sweetalert2";
 import axiosApi from "../../api/axiosInstansce";
 
-const badgeColor = (status) => {
-  if (status === "Published") return "bg-green-100 text-green-800";
-  if (status === "Pending Review") return "bg-yellow-100 text-yellow-800";
-  return "bg-gray-100 text-gray-700";
-};
-
 const MyLessons = () => {
   const { user, loading, error, lessons, formatDateTime } = useCurrentUser();
+
+  const toggleVisibility = () => {};
 
   // Stats
   const stats = {
@@ -141,6 +137,9 @@ const MyLessons = () => {
                     Visibility
                   </th>
                   <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">
+                    ReviewStatus
+                  </th>
+                  <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">
                     Created
                   </th>
                   <th className="px-3 sm:px-4 py-2 text-xs sm:text-sm">
@@ -189,6 +188,18 @@ const MyLessons = () => {
                           {lesson.visibility}
                         </span>
                       </td>
+                      <td className="px-3 sm:px-4 py-2">
+                        <span
+                          className={`cursor-pointer px-2 py-1 rounded-full font-semibold text-xs sm:text-sm ${
+                            lesson.reviewStatus === "pending"
+                              ? "bg-yellow-600 text-white"
+                              : "bg-green-400 text-white"
+                          }`}
+                        >
+                          {lesson.reviewStatus}
+                        </span>
+                      </td>
+                     
                       <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm">
                         <p>{formatDateTime(lesson.createdAt)}</p>
                       </td>
@@ -198,11 +209,13 @@ const MyLessons = () => {
                             <HiOutlineEye className="cursor-pointer text-gray-600" />
                           </motion.div>
                         </Link>
-                        <Link to={`/update-lesson`}>
+
+                        <Link to={`/dashboard/update-lesson/${lesson._id}`}>
                           <motion.div whileHover={{ scale: 1.2 }}>
                             <HiOutlinePencil className="cursor-pointer text-indigo-600" />
                           </motion.div>
                         </Link>
+
                         <motion.div whileHover={{ scale: 1.2 }}>
                           <HiOutlineTrash
                             className="cursor-pointer text-red-600"

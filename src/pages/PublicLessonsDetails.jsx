@@ -1,13 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import axiosApi from "../api/axiosInstansce";
-import { Lock } from "lucide-react";
-import { useState } from "react";
+import { Lock, Heart, Bookmark, Eye, Flag, Share2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import useCurrentUser from "../hooks/useCurrentUser";
 import LoadingPage from "../components/shared/LoadingPage";
-import { Heart, Bookmark, Eye, Flag, Share2 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Swal from "sweetalert2";
+import axios from "axios";
 
 /* ================= API ================= */
 const getLessonDetails = async (id) => {
@@ -15,112 +14,29 @@ const getLessonDetails = async (id) => {
   return res.data;
 };
 
-/* ================= STATIC RELATED LESSONS ================= */
-const relatedLessonsMock = [
-  {
-    _id: "1",
-    title: "Personal Growth Tip 1",
-    category: "Personal Growth",
-    emotionalTone: "Motivational",
-    userImage: "/default-lesson.png",
-  },
-  {
-    _id: "2",
-    title: "Career Advice 101",
-    category: "Career",
-    emotionalTone: "Motivational",
-    userImage: "/default-lesson.png",
-  },
-  {
-    _id: "3",
-    title: "Relationship Wisdom",
-    category: "Relationships",
-    emotionalTone: "Realization",
-    userImage: "/default-lesson.png",
-  },
-  {
-    _id: "4",
-    title: "Mindset Mastery",
-    category: "Mindset",
-    emotionalTone: "Motivational",
-    userImage: "/default-lesson.png",
-  },
-  {
-    _id: "5",
-    title: "Lessons Learned",
-    category: "Mistakes Learned",
-    emotionalTone: "Gratitude",
-    userImage: "/default-lesson.png",
-  },
-  {
-    _id: "6",
-    title: "Self Reflection",
-    category: "Personal Growth",
-    emotionalTone: "Sad",
-    userImage: "/default-lesson.png",
-  },
-];
+const getRelatedLessons = async (category, emotionalTone, currentId) => {
+  const res = await axiosApi.get(
+    `/lessons?category=${category}&emotionalTone=${emotionalTone}`
+  );
+  return res.data.filter((l) => l._id !== currentId).slice(0, 6); // max 6
+};
 
 const PublicLessonsDetails = () => {
   const { id } = useParams();
-  const { user } = useCurrentUser();
-  const formatDateTime = (date) => {
-    return new Intl.DateTimeFormat("en-US", {
+  const { user, lessons } = useCurrentUser();
+  const queryClient = useQueryClient();
+  const [comment, setComment] = useState("");
+  const [relatedLessons, setRelatedLessons] = useState([]);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  const formatDateTime = (date) =>
+    new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
     }).format(new Date(date));
-  };
-  const [comment, setComment] = useState("");
 
-  console.log(user);
-
-  // get all comment
-  const fetchComments = async () => {
-    const res = await axiosApi.get(`/comments?lessonId=${id}`);
-    return res.data;
-  };
-  const { data: comments = [], isLoading: commentsLoading } = useQuery({
-    queryKey: ["comments", id],
-    queryFn: fetchComments,
-    enabled: !!id,
-  });
-
-  // comment handle
-  const handleComments = async (e) => {
-    e.preventDefault();
-    if (!comment.trim()) return;
-    const data = {
-      lessonId: id,
-      userId: user._id,
-      userName: user.userName,
-      userImage: user.userImage,
-      commentText: comment,
-      createdAt: new Date(),
-    };
-    addCommentMutation.mutate(data);
-  };
-
-  // all mutations
-  const queryClient = useQueryClient();
-  const addCommentMutation = useMutation({
-    mutationFn: (commentData) => axiosApi.post("/comments", commentData),
-    onSuccess: () => {
-      setComment("");
-      queryClient.invalidateQueries(["comments", id]);
-    },
-  });
-  const likeMutation = useMutation({
-    mutationFn: (lessonId) => axiosApi.patch(`/lessons/${lessonId}/like`),
-    onSuccess: () => {
-      // refetch lesson to update likes count
-      queryClient.invalidateQueries(["lesson", id]);
-    },
-    onError: (err) => {
-      console.error("Failed to like lesson:", err);
-      alert("Failed to like lesson");
-    },
-  });
   /* ================= FETCH LESSON ================= */
   const {
     data: lesson,
@@ -132,56 +48,106 @@ const PublicLessonsDetails = () => {
     enabled: !!id,
   });
 
-  /* ================= LOADING / ERROR ================= */
-  if (lessonLoading || !user) {
-    return (
-      <div>
-        <LoadingPage />
-      </div>
+  useEffect(() => {
+    if (lesson) {
+      axiosApi.patch(`/lessons/${lesson._id}/view`);
+    }
+  }, [lesson]);
+  /* ================= FETCH COMMENTS ================= */
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: ["comments", id],
+    queryFn: async () => {
+      const res = await axiosApi.get(`/comments?lessonId=${id}`);
+      return res.data;
+    },
+    enabled: !!id,
+  });
+
+  /* ================= MUTATIONS ================= */
+
+  const addCommentMutation = useMutation({
+    mutationFn: (data) => axiosApi.post("/comments", data),
+    onSuccess: () => {
+      setComment("");
+      queryClient.invalidateQueries(["comments", id]);
+    },
+  });
+
+  const queryRelatedLessons = async () => {
+    if (!lesson) return;
+    const data = await getRelatedLessons(
+      lesson.category,
+      lesson.emotionalTone,
+      lesson._id
     );
-  }
-  if (lessonError || !lesson) {
+    setRelatedLessons(data);
+  };
+
+  /* ================= STATE BASED ON LESSON ================= */
+  useEffect(() => {
+    if (lesson && user) {
+      setIsLiked(lesson.likes?.includes(user._id));
+      setIsFavorited(lesson.favorites?.includes(user._id));
+      queryRelatedLessons();
+    }
+  }, [lesson, user]);
+
+  /* ================= LOADING / ERROR ================= */
+  if (lessonLoading || !user) return <LoadingPage />;
+  if (lessonError || !lesson)
     return (
       <div className="min-h-screen flex items-center justify-center text-red-500">
         Lesson not found
       </div>
     );
-  }
 
   /* ================= LOCK CHECK ================= */
-  const isLocked = lesson.accessLevel === "Free" && !user.isPremium;
+  const isLocked = lesson.accessLevel === "Premium" && !user.isPremium;
 
   /* ================= STATIC ENGAGEMENT ================= */
-  const favoritesCount = lesson.favoritesCount || 342;
-  const viewsCount = lesson.viewsCount || Math.floor(Math.random() * 10000);
+  const favoritesCount = lesson.favoritesCount || 0;
+  const viewsCount = lesson.viewsCount || Math.floor(Math.random() * 100);
+  const readingTime =
+    lesson.readingTime || Math.ceil(lesson.description.split(" ").length / 200);
 
-  /* ================= INTERACTION HANDLERS ================= */
-  // favorite item handle
+  /* ================= HANDLERS ================= */
   const handleFavorite = async () => {
+    if (!user) return;
+
     try {
-      const data = {
+      // Add favorite in favorites collection
+      await axiosApi.post("/favorites", {
         userId: user._id,
-        userEmail: user.email,
-        lessonId: id,
-        lessonTitle: lesson.title,
-        lessonCategory: lesson.category,
-        lessonTone: lesson.emotionalTone,
-        createdAt: new Date().toISOString(),
-      };
-      if (user.userName === lesson.creatorName) {
-        return alert("its already your added lesson");
-      }
-      const res = await axiosApi.post("/favorites", data);
-      if (res.status === 201) {
-        alert("Added to favorites!");
-      }
+        lessonId: lesson._id,
+      });
+
+      // Increment favorite count in lessons collection
+      await axiosApi.patch(`/lessons/${lesson._id}/favorite`);
+
+      // Optimistically update local state
+      setIsFavorited(true);
+
+      // Refresh lesson data
+      queryClient.invalidateQueries(["lesson", id]);
     } catch (err) {
-      console.error("Failed to add favorite:", err);
-      alert("Could not add favorite.");
+      console.error(err);
+      alert("Failed to add favorite");
     }
   };
 
-  // handle report
+  const handleLike = async () => {
+    if (!user) return;
+
+    try {
+      await axiosApi.patch(`/lessons/${lesson._id}/like`);
+      setIsLiked(true);
+      queryClient.invalidateQueries(["lesson", id]);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to like");
+    }
+  };
+
   const handleReport = async () => {
     const { value: reason } = await Swal.fire({
       title: "Report this lesson",
@@ -200,65 +166,75 @@ const PublicLessonsDetails = () => {
 
     if (reason) {
       try {
-        const reportData = {
+        await axiosApi.post("/lessonsReports", {
           lessonId: id,
+          lessonTitle: lesson.title,
           reporterUserId: user._id,
-          reportUserName: user.userName,
+          reporterEmail: user.email,
+          reporterUserName: user.userName,
+          reportsCount: 0,
           reason,
           timestamp: new Date().toISOString(),
-        };
-        await axiosApi.post("/lessonsReports", reportData);
-        Swal.fire({
-          icon: "success",
-          title: "Reported!",
-          text: "Thank you for reporting. We will review it soon.",
         });
+        Swal.fire(
+          "Reported!",
+          "Thank you for reporting. We will review it soon.",
+          "success"
+        );
       } catch (err) {
         console.error("Failed to report lesson:", err);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to report this lesson.",
-        });
+        Swal.fire("Error", "Failed to report this lesson.", "error");
       }
     }
   };
 
-  // handle share
-  const handleShare = () => alert("Shared (mock)");
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: lesson.title,
+          text: lesson.description,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Failed to share");
+      }
+    } else {
+      alert("Sharing not supported in this browser");
+    }
+  };
 
+  const handleComments = (e) => {
+    e.preventDefault();
+    if (!comment.trim()) return;
+
+    const data = {
+      lessonId: id,
+      userId: user._id,
+      userName: user.userName,
+      userImage: user.userImage,
+      commentText: comment,
+      createdAt: new Date(),
+    };
+    addCommentMutation.mutate(data);
+  };
+
+  /* ================= RENDER ================= */
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
       {isLocked ? (
-        /* ================= LOCKED VIEW ================= */
         <div className="relative rounded-2xl shadow-xl overflow-hidden">
           <img
             src={lesson.userImage || "/default-lesson.png"}
             alt={lesson.title}
             className="w-full h-72 object-cover blur-md brightness-75"
           />
-          <div className=" p-10 blur-[4px] gap-3 pt-4 border-t">
-            <img
-              src={lesson.creatorPhotoURL || "/default-avatar.png"}
-              alt={lesson.creatorName}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-            <h1 className="text-3xl  brightness-75 font-extrabold text-gray-900">
-              {lesson.title}
-            </h1>
-            <p className="text-gray-700  brightness-75 leading-relaxed">
-              {lesson.description}
-            </p>
-          </div>
-
           <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-center p-6">
             <Lock size={40} className="mb-4" />
             <h2 className="text-2xl font-bold mb-2">
-              Lesson is locked because your are not a Premium user
+              Premium Lesson - Upgrade to view
             </h2>
-            <p className="mb-6 text-sm text-gray-200">
-              To read this full lesson, you need a premium account.
-            </p>
             <Link
               to="/dashboard/pricing"
               className="px-6 py-2 bg-yellow-500 text-black font-semibold rounded-xl hover:bg-yellow-400 transition"
@@ -268,7 +244,6 @@ const PublicLessonsDetails = () => {
           </div>
         </div>
       ) : (
-        /* ================= UNLOCKED VIEW ================= */
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <img
             src={lesson.userImage || "/default-lesson.png"}
@@ -276,45 +251,25 @@ const PublicLessonsDetails = () => {
             className="w-full h-72 object-cover"
           />
           <div className="p-6 space-y-5">
+            {/* Title & Description */}
             <h1 className="text-3xl font-extrabold text-gray-900">
               {lesson.title}
             </h1>
             <p className="text-gray-700 leading-relaxed">
               {lesson.description}
             </p>
-            {/* lesson meta data */}
-            <div className="flex items-center flex-wrap gap-4 text-sm text-gray-500">
+
+            {/* Metadata */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
               <span>📌 {lesson.category}</span>
               <span>🎭 {lesson.emotionalTone}</span>
-              <span>
-                🗓 Created: {new Date(lesson.createdAt).toLocaleDateString()}
-              </span>
-              <span>🗓 Last Updated: {formatDateTime(lesson.updatedAt)}</span>
-              <span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="size-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                  />
-                </svg>
-              </span>
-              <span> Visibility: Public</span>
-              <span>⏱ Estimated Reading: 5 min</span>
+              <span>🗓 Created: {formatDateTime(lesson.createdAt)}</span>
+              <span>🗓 Updated: {formatDateTime(lesson.updatedAt)}</span>
+              <span>Visibility: {lesson.visibility}</span>
+              <span>⏱ {readingTime} min read</span>
             </div>
-            {/* creator info  */}
+
+            {/* Creator */}
             <div className="flex items-center gap-3 pt-4 border-t">
               <img
                 src={lesson.creatorPhotoURL || "/default-avatar.png"}
@@ -324,99 +279,58 @@ const PublicLessonsDetails = () => {
               <div>
                 <p className="font-semibold">{lesson.creatorName}</p>
                 <p className="text-xs text-gray-500">{lesson.creatorEmail}</p>
-                <p className="text-xs text-gray-400">Total Lessons: 12</p>
+                <p className="text-xs text-gray-400">
+                  Total Lessons: {lesson.totalLessonsCreated || 0}
+                </p>
                 <Link
-                  to={`/author/${lesson.creatorId}`}
+                  to={`/dashboard/author/${lesson.creatorId}`}
                   className="text-blue-500 text-xs hover:underline"
                 >
                   View all lessons by this author
                 </Link>
               </div>
             </div>
-            {/* inspiration key */}
+
+            {/* Engagement */}
             <div className="flex flex-wrap items-center gap-5 pt-4 text-slate-500">
-              {/* Like */}
-              {/* Like */}
-              <button
-                onClick={() => likeMutation.mutate(id)}
-                className="group flex items-center gap-1 cursor-pointer"
-              >
-                <Heart
-                  className="
-      size-6
-      transition-all duration-300
-      group-hover:text-red-500
-      group-hover:fill-red-500/30
-      group-hover:scale-110
-    "
-                />
-                <span className="text-sm">{lesson.likesCount}</span>
+              <button onClick={handleLike} className="flex items-center gap-1">
+                <Heart className="size-6" />
+                <span>{lesson.likesCount}</span>
               </button>
 
-              {/* Favorite */}
               <button
                 onClick={handleFavorite}
-                className="group flex items-center gap-1 cursor-pointer"
+                className="flex items-center gap-1"
               >
-                <Bookmark
-                  className="
-        size-5
-        transition-all duration-300
-        group-hover:text-yellow-500
-        group-hover:fill-yellow-400/30
-        group-hover:scale-110
-      "
-                />
-                <span className="text-sm">{favoritesCount}</span>
+                <Bookmark className="size-6" />
+                <span>{lesson.favoritesCount}</span>
               </button>
 
-              {/* Views */}
               <div className="group flex items-center gap-1 cursor-pointer">
-                <Eye
-                  className="size-5
-                     transition-all duration-300
-                     group-hover:text-blue-500
-                     group-hover:scale-105  "
-                />
+                <Eye className="size-5 transition-all duration-300 group-hover:text-blue-500 group-hover:scale-105" />
                 <span className="text-sm">{viewsCount}</span>
               </div>
-
-              {/* Report */}
               <button
                 onClick={handleReport}
                 className="ml-auto group flex items-center gap-1 cursor-pointer"
               >
-                <Flag
-                  className="
-        size-5
-        transition-all duration-300
-        group-hover:text-red-600
-        group-hover:scale-110
-      "
-                />
+                <Flag className="size-5 transition-all duration-300 group-hover:text-red-600 group-hover:scale-110" />
                 <span className="text-sm">Report</span>
               </button>
-
-              {/* Share */}
-              <button className="group flex items-center gap-1 cursor-pointer">
-                <Share2
-                  className="
-        size-5
-        transition-all duration-300
-        group-hover:text-indigo-600
-        group-hover:scale-110
-      "
-                />
+              <button
+                onClick={handleShare}
+                className="group flex items-center gap-1 cursor-pointer"
+              >
+                <Share2 className="size-5 transition-all duration-300 group-hover:text-indigo-600 group-hover:scale-110" />
                 <span className="text-sm">Share</span>
               </button>
             </div>
-            {/* comments */}
+
+            {/* Comments */}
             <div className="pt-6 border-t space-y-3">
               <h2 className="font-semibold text-lg">Comments</h2>
               {commentsLoading ? (
-                <div>
-                  <LoadingPage />
-                </div>
+                <LoadingPage />
               ) : (
                 comments.map((c) => (
                   <div key={c._id} className="bg-gray-100 p-2 rounded">
@@ -452,18 +366,18 @@ const PublicLessonsDetails = () => {
                 </button>
               </form>
             </div>
-            {/* related lesson */}
+
+            {/* Related Lessons */}
             <div className="pt-6 border-t">
               <h2 className="font-semibold text-lg mb-4">Related Lessons</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {relatedLessonsMock.map((l) => (
+                {relatedLessons.map((l) => (
                   <Link
-                    to={`/public-lessons-details/${l._id}`}
                     key={l._id}
                     className="bg-white shadow rounded-lg overflow-hidden hover:shadow-lg transition"
                   >
                     <img
-                      src={l.userImage}
+                      src={l.userImage || "/default-lesson.png"}
                       alt={l.title}
                       className="w-full h-36 object-cover"
                     />
