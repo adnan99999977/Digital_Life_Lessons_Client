@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import LoadingPage from "../../components/shared/LoadingPage";
-import axiosApi from "../../api/axiosInstansce";
+import useAxios from "../../api/useAxios";
 
 const defaultUserData = {
   name: "User",
@@ -33,6 +33,7 @@ const defaultUserData = {
 };
 
 const Profile = () => {
+  const axiosApi = useAxios();
   const { user, loading, error, lessons } = useCurrentUser();
   const [userData, setUserData] = useState(defaultUserData);
   const [editName, setEditName] = useState(false);
@@ -67,6 +68,7 @@ const Profile = () => {
     setNewName(user.userName || "Unnamed User");
     setNewPhoto(user.userImage || defaultUserData.photoURL);
   }, [user, lessons]);
+
 
   if (loading)
     return (

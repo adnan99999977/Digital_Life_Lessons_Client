@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle, Bell } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import axiosApi from "../../api/axiosInstansce";
+import useAxios from "../../api/useAxios";
 
 const Payment = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const axiosApi = useAxios();
 
  useEffect(() => {
+
   const fetchPaymentData = async () => {
     if (!sessionId) return;
     try {

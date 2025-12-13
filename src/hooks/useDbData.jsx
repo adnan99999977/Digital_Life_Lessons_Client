@@ -1,14 +1,15 @@
 import { useContext, useEffect, useState } from "react";
-import axiosApi from "../api/axiosInstansce";
 import { AuthContext } from "../auth/AuthContext";
+import useAxios from "../api/useAxios";
 
 const useDbData = () => {
   const { currentUser } = useContext(AuthContext);
   const [dbUser, setDbUser] = useState(null);
   const [lessons, setLessons] = useState([]);
+  const axiosApi = useAxios();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  
    const formatDateTime = (date) => {
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -20,6 +21,7 @@ const useDbData = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+
       if (!currentUser?.email) return setLoading(true);
       try {
         // fetching user
@@ -41,7 +43,6 @@ const useDbData = () => {
 
       } catch (err) {
         console.error("Failed to fetch user or lessons:", err);
-        setError(err);
       } finally {
         setLoading(false);
       }

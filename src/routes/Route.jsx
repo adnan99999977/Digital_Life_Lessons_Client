@@ -25,7 +25,6 @@ import Payment from "../pages/clientDashboradPages/Payment.jsx";
 import PaymentCancel from "../pages/clientDashboradPages/PaymentCancel.jsx";
 import MyFavorites from "../pages/clientDashboradPages/MyFavorites.jsx";
 import UpdateLesson from "../pages/clientDashboradPages/UpdateLesson.jsx";
-import AuthorProfile from "../pages/clientDashboradPages/AuthorProfile.jsx";
 import PrivetLessons from "../pages/clientDashboradPages/PrivetLessons.jsx";
 
 const router = createBrowserRouter([
@@ -75,9 +74,7 @@ const router = createBrowserRouter([
       { path: "paymentCancel", element: <PaymentCancel /> },
       { path: "my-favorite", element: <MyFavorites /> },
       { path: "update-lesson/:id", element: <UpdateLesson /> },
-      { path: "author/:authorId", element: <AuthorProfile /> },
-      { path: "privet-lessons", element: <PrivetLessons/> },
-
+      { path: "privet-lessons", element: <PrivetLessons /> },
     ],
   },
 

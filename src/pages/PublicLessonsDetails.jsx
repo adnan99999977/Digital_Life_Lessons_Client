@@ -1,12 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import axiosApi from "../api/axiosInstansce";
 import { Lock, Heart, Bookmark, Eye, Flag, Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import useCurrentUser from "../hooks/useCurrentUser";
 import LoadingPage from "../components/shared/LoadingPage";
 import Swal from "sweetalert2";
-import axios from "axios";
+import useAxios from "../api/useAxios";
 
 /* ================= API ================= */
 const getLessonDetails = async (id) => {
@@ -29,6 +28,7 @@ const PublicLessonsDetails = () => {
   const [relatedLessons, setRelatedLessons] = useState([]);
   const [isLiked, setIsLiked] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const axiosApi = useAxios();
 
   const formatDateTime = (date) =>
     new Intl.DateTimeFormat("en-US", {
@@ -172,10 +172,10 @@ const PublicLessonsDetails = () => {
           reporterUserId: user._id,
           reporterEmail: user.email,
           reporterUserName: user.userName,
-          reportsCount: 0,
-          reason,
+          reason: [],
           timestamp: new Date().toISOString(),
         });
+
         Swal.fire(
           "Reported!",
           "Thank you for reporting. We will review it soon.",
@@ -280,14 +280,8 @@ const PublicLessonsDetails = () => {
                 <p className="font-semibold">{lesson.creatorName}</p>
                 <p className="text-xs text-gray-500">{lesson.creatorEmail}</p>
                 <p className="text-xs text-gray-400">
-                  Total Lessons: {lesson.totalLessonsCreated || 0}
+                  Total Lessons: {lesson.totalLessonsCreated || 1}
                 </p>
-                <Link
-                  to={`/dashboard/author/${lesson.creatorId}`}
-                  className="text-blue-500 text-xs hover:underline"
-                >
-                  View all lessons by this author
-                </Link>
               </div>
             </div>
 

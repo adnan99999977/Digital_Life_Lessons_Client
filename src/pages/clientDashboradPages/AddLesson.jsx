@@ -3,9 +3,9 @@ import { Lock, Star } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../auth/AuthContext";
 import { useForm } from "react-hook-form";
-import axiosApi from "../../api/axiosInstansce";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingPage from "../../components/shared/LoadingPage";
+import useAxios from "../../api/useAxios";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -20,6 +20,7 @@ const AddLesson = () => {
   const [fileName, setFileName] = useState("Choose an image");
   const [newUser, setNewUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
+  const axiosApi = useAxios();
 
   const {
     register,

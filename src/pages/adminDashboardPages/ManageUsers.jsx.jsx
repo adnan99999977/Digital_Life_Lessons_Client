@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import axiosApi from "../../api/axiosInstansce";
 import LoadingPage from "../../components/shared/LoadingPage";
 import useDbData from "../../hooks/useDbData";
+import useAxios from "../../api/useAxios";
 
 const PROTECTED_ADMIN_EMAIL = "adminadnan@gmail.com";
 
 const ManageUsers = () => {
   const { dbUser, loading } = useDbData();
   const [localUsers, setLocalUsers] = useState([]);
+  const axiosApi = useAxios();
 
   // sync hook data to local state
   useEffect(() => {
@@ -30,9 +31,7 @@ const ManageUsers = () => {
     try {
       await axiosApi.patch(`/users/${id}`, { role: newRole });
       setLocalUsers(
-        localUsers.map((u) =>
-          u._id === id ? { ...u, role: newRole } : u
-        )
+        localUsers.map((u) => (u._id === id ? { ...u, role: newRole } : u))
       );
       alert(`User role updated to ${newRole}`);
     } catch (err) {
@@ -97,7 +96,10 @@ const ManageUsers = () => {
           <tbody className="divide-y divide-gray-200">
             {localUsers.length > 0 ? (
               localUsers.map((user) => (
-                <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={user._id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-6 py-4">{user.userName}</td>
                   <td className="px-6 py-4">{user.email}</td>
                   <td className="px-6 py-4">
@@ -119,7 +121,11 @@ const ManageUsers = () => {
                         user.role === "Admin"
                           ? "bg-indigo-500 hover:bg-indigo-600"
                           : "bg-green-500 hover:bg-green-600"
-                      } ${user.email === PROTECTED_ADMIN_EMAIL ? "opacity-50 cursor-not-allowed" : ""}`}
+                      } ${
+                        user.email === PROTECTED_ADMIN_EMAIL
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
+                      }`}
                       onClick={() => toggleRole(user._id)}
                     >
                       {user.role === "Admin"
@@ -130,7 +136,9 @@ const ManageUsers = () => {
                     <button
                       disabled={user.email === PROTECTED_ADMIN_EMAIL}
                       className={`px-3 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 font-medium text-sm transition-colors duration-300 ${
-                        user.email === PROTECTED_ADMIN_EMAIL ? "opacity-50 cursor-not-allowed" : ""
+                        user.email === PROTECTED_ADMIN_EMAIL
+                          ? "opacity-50 cursor-not-allowed"
+                          : ""
                       }`}
                       onClick={() => deleteUser(user._id)}
                     >

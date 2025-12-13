@@ -1,187 +1,227 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
 import LoadingPage from "../../components/shared/LoadingPage";
-import useDbData from "../../hooks/useDbData";
+import useAxios from "../../api/useAxios";
+import Swal from "sweetalert2";
 
 const ManageLessons = () => {
-  const { lessons: dbLessons, reports, loading } = useDbData();
-
+  const axiosApi = useAxios();
   const [lessons, setLessons] = useState([]);
-  const [filterCategory, setFilterCategory] = useState("");
-  const [filterVisibility, setFilterVisibility] = useState("");
-  const [filterFlagged, setFilterFlagged] = useState(false);
-  const [sortOption, setSortOption] = useState("newest");
+  const [filteredLessons, setFilteredLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // On DB lessons change, add dynamic flag count
+  // Filters
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [visibilityFilter, setVisibilityFilter] = useState("All");
+  const [flaggedFilter, setFlaggedFilter] = useState(false);
+
+  // Stats
+  const [stats, setStats] = useState({
+    public: 0,
+    private: 0,
+    flagged: 0,
+  });
+
+  // Fetch all lessons
+  const fetchLessons = async () => {
+    try {
+      const res = await axiosApi.get("/lessons");
+      setLessons(res.data);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (dbLessons) {
-      const lessonsWithFlags = dbLessons.map((lesson) => {
-        const lessonReports = reports.filter((r) => r.lessonId === lesson._id);
-        return { ...lesson, flags: reports.length };
-      });
-      setLessons(lessonsWithFlags);
+    fetchLessons();
+  }, []);
+
+  // Filter lessons whenever filter changes
+  useEffect(() => {
+    let temp = [...lessons];
+
+    if (categoryFilter !== "All") {
+      temp = temp.filter((l) => l.category === categoryFilter);
     }
-  }, [dbLessons, reports]);
-
-  // DELETE LESSON
-  const deleteLesson = (id) => {
-    if (window.confirm("Are you sure you want to delete this lesson?")) {
-      setLessons(lessons.filter((lesson) => lesson._id !== id));
+    if (visibilityFilter !== "All") {
+      temp = temp.filter((l) => l.visibility === visibilityFilter);
     }
-  };
+    if (flaggedFilter) {
+      temp = temp.filter((l) => l.reportsCount > 0);
+    }
 
-  // TOGGLE FEATURE
-   const toggleFeatured = (id) => {
-    setLessons(
-      lessons.map((lesson) =>
-        lesson._id === id ? { ...lesson, featured: !lesson.featured } : lesson
-      )
-    );
-  };
+    setFilteredLessons(temp);
 
-  // MARK REVIEWED
-  const markReviewed = (id) => {
-    setLessons(
-      lessons.map((lesson) =>
-        lesson._id === id ? { ...lesson, reviewed: true } : lesson
-      )
-    );
-  };
+    // Update stats
+    const publicCount = lessons.filter((l) => l.visibility === "Public").length;
+    const privateCount = lessons.filter((l) => l.visibility === "Private").length;
+    const flaggedCount = lessons.filter((l) => l.reportsCount > 0).length;
 
-  // FILTER & SORT
-  const filteredLessons = lessons
-    .filter((lesson) => (filterCategory ? lesson.category === filterCategory : true))
-    .filter((lesson) => (filterVisibility ? lesson.visibility === filterVisibility : true))
-    .filter((lesson) => (filterFlagged ? lesson.flags > 0 : true))
-    .sort((a, b) => {
-      if (sortOption === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
-      if (sortOption === "oldest") return new Date(a.createdAt) - new Date(b.createdAt);
-      if (sortOption === "mostFlagged") return b.flags - a.flags;
-      return 0;
+    setStats({ public: publicCount, private: privateCount, flagged: flaggedCount });
+  }, [lessons, categoryFilter, visibilityFilter, flaggedFilter]);
+
+  // Delete lesson
+  const deleteLesson = async (id) => {
+    const confirm = await Swal.fire({
+      title: "Are you sure?",
+      text: "This will permanently delete the lesson.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
     });
 
-  // STATS
-  const stats = {
-    publicLessons: lessons.filter((l) => l.visibility === "Public").length,
-    privateLessons: lessons.filter((l) => l.visibility === "Private").length,
-    flaggedLessons: lessons.length,
+    if (confirm.isConfirmed) {
+      try {
+        await axiosApi.delete(`/lessons/${id}`);
+        setLessons(lessons.filter((l) => l._id !== id));
+        Swal.fire("Deleted!", "Lesson has been deleted.", "success");
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Failed to delete lesson", "error");
+      }
+    }
+  };
+
+  // Toggle featured
+  const toggleFeatured = async (lesson) => {
+    try {
+      const updatedLesson = { ...lesson, featured: !lesson.featured };
+      await axiosApi.patch(`/lessons/${lesson._id}`, { featured: updatedLesson.featured });
+      setLessons(
+        lessons.map((l) => (l._id === lesson._id ? updatedLesson : l))
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Mark as reviewed
+  const toggleReviewed = async (lesson) => {
+    try {
+      const updatedLesson = { ...lesson, reviewed: !lesson.reviewed };
+      await axiosApi.patch(`/lessons/${lesson._id}`, { reviewed: updatedLesson.reviewed });
+      setLessons(
+        lessons.map((l) => (l._id === lesson._id ? updatedLesson : l))
+      );
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   if (loading) return <LoadingPage />;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">Manage Lessons</h1>
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-4xl font-extrabold text-gray-800 text-center mb-6">
+        Manage Lessons
+      </h1>
 
-      {/* STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Public Lessons" value={stats.publicLessons} color="bg-green-200" />
-        <StatCard label="Private Lessons" value={stats.privateLessons} color="bg-blue-200" />
-        <StatCard label="Flagged Lessons" value={stats.flaggedLessons} color="bg-red-200" />
+      {/* Stats */}
+      <div className="flex gap-4 mb-6 justify-center">
+        <div className="px-4 py-2 bg-green-100 rounded">Public: {stats.public}</div>
+        <div className="px-4 py-2 bg-yellow-100 rounded">Private: {stats.private}</div>
+        <div className="px-4 py-2 bg-red-100 rounded">Flagged: {stats.flagged}</div>
       </div>
 
-      {/* FILTER & SORT */}
-      <div className="flex flex-wrap gap-4 items-center mb-6">
+      {/* Filters */}
+      <div className="flex gap-4 mb-6 justify-center">
         <select
-          className="border rounded-xl p-2"
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
+          className="border px-3 py-1 rounded"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
         >
-          <option value="">All Categories</option>
-          <option>Frontend</option>
-          <option>Backend</option>
-          <option>Mindset</option>
-          <option>Mistakes Learned</option>
+          <option value="All">All Categories</option>
+          <option value="Motivation">Motivation</option>
+          <option value="Education">Education</option>
+          <option value="Health">Health</option>
+          {/* add other categories as needed */}
         </select>
 
         <select
-          className="border rounded-xl p-2"
-          value={filterVisibility}
-          onChange={(e) => setFilterVisibility(e.target.value)}
+          className="border px-3 py-1 rounded"
+          value={visibilityFilter}
+          onChange={(e) => setVisibilityFilter(e.target.value)}
         >
-          <option value="">All Visibilities</option>
-          <option>Public</option>
-          <option>Private</option>
+          <option value="All">All Visibility</option>
+          <option value="Public">Public</option>
+          <option value="Private">Private</option>
         </select>
 
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={filterFlagged}
-            onChange={() => setFilterFlagged(!filterFlagged)}
+            checked={flaggedFilter}
+            onChange={(e) => setFlaggedFilter(e.target.checked)}
           />
-          Flagged Only
+          Show Flagged Only
         </label>
-
-        <select
-          className="border rounded-xl p-2 ml-auto"
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
-        >
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="mostFlagged">Most Flagged</option>
-        </select>
       </div>
 
-      {/* LESSON GRID */}
-      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLessons.map((lesson) => (
-          <motion.div
-            key={lesson._id}
-            className="bg-white shadow-lg rounded-xl p-6 flex flex-col justify-between hover:shadow-2xl transition-shadow"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.03 }}
-          >
-            <div className="space-y-2">
-              <h2 className="text-xl font-semibold">{lesson.title}</h2>
-              <p>Creator: <span className="font-medium">{lesson.creatorName}</span></p>
-              <p>Category: <span className="font-medium">{lesson.category}</span></p>
-              <p>Visibility: <span className="font-medium">{lesson.visibility}</span></p>
-              <p>Flags: <span className="font-medium">{lesson.flags}</span></p>
-              <p>Created: <span className="font-medium">{new Date(lesson.createdAt).toLocaleDateString()}</span></p>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                className={`px-4 py-2 rounded-lg text-white font-medium transition-colors ${
-                  lesson.featured ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-                onClick={() => toggleFeatured(lesson._id)}
-              >
-                {lesson.featured ? "Unfeature" : "Feature"}
-              </button>
-
-              <button
-                className={`px-4 py-2 rounded-lg text-white font-medium transition-colors ${
-                  lesson.reviewed ? "bg-green-400 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-600"
-                }`}
-                onClick={() => markReviewed(lesson._id)}
-                disabled={lesson.reviewed}
-              >
-                {lesson.reviewed ? "Reviewed" : "Mark Reviewed"}
-              </button>
-
-              <button
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
-                onClick={() => deleteLesson(lesson._id)}
-              >
-                Delete
-              </button>
-            </div>
-          </motion.div>
-        ))}
+      {/* Lessons Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 text-left">Title</th>
+              <th className="px-4 py-2 text-left">Category</th>
+              <th className="px-4 py-2 text-left">Visibility</th>
+              <th className="px-4 py-2 text-left">Featured</th>
+              <th className="px-4 py-2 text-left">Reviewed</th>
+              <th className="px-4 py-2 text-left">Reports</th>
+              <th className="px-4 py-2 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filteredLessons.length > 0 ? (
+              filteredLessons.map((lesson) => (
+                <tr key={lesson._id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-2">{lesson.title}</td>
+                  <td className="px-4 py-2">{lesson.category}</td>
+                  <td className="px-4 py-2">{lesson.visibility || "Public"}</td>
+                  <td className="px-4 py-2">
+                    <button
+                      className={`px-2 py-1 rounded ${
+                        lesson.featured ? "bg-yellow-500 text-white" : "bg-gray-200"
+                      }`}
+                      onClick={() => toggleFeatured(lesson)}
+                    >
+                      {lesson.featured ? "Yes" : "No"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-2">
+                    <button
+                      className={`px-2 py-1 rounded ${
+                        lesson.reviewed ? "bg-green-500 text-white" : "bg-gray-200"
+                      }`}
+                      onClick={() => toggleReviewed(lesson)}
+                    >
+                      {lesson.reviewed ? "Yes" : "No"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-2">{lesson.reportsCount || 0}</td>
+                  <td className="px-4 py-2 text-center flex gap-2 justify-center">
+                    <button
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      onClick={() => deleteLesson(lesson._id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-gray-500">
+                  No lessons found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 };
-
-const StatCard = ({ label, value, color }) => (
-  <div className={`p-4 rounded-xl shadow-md text-center font-medium ${color}`}>
-    <p className="text-gray-800 text-lg">{label}</p>
-    <p className="text-2xl font-bold">{value}</p>
-  </div>
-);
 
 export default ManageLessons;

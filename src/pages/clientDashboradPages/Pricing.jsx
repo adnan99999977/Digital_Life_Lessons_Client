@@ -2,12 +2,14 @@ import React, { useContext, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
-import axiosApi from "../../api/axiosInstansce";
 import useCurrentUser from "../../hooks/useCurrentUser";
 import LoadingPage from "../../components/shared/LoadingPage";
+import useAxios from "../../api/useAxios";
 
 const Pricing = () => {
-  const { user, loading, error } = useCurrentUser();
+  const { user, } = useCurrentUser();
+    const axiosApi = useAxios();
+
 
   const features = [
     { name: "Number of Lessons", free: "10", premium: "Unlimited" },

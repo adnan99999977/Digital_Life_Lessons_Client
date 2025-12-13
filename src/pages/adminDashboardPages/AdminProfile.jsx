@@ -14,7 +14,7 @@ import {
 import useCurrentUser from "../../hooks/useCurrentUser";
 import useDbData from "../../hooks/useDbData";
 import LoadingPage from "../../components/shared/LoadingPage";
-import axiosApi from "../../api/axiosInstansce";
+import useAxios from "../../api/useAxios";
 
 const AdminProfile = () => {
   const { user, loading, error } = useCurrentUser();
@@ -37,6 +37,8 @@ const AdminProfile = () => {
   const [newPhoto, setNewPhoto] = useState(userData.photoURL);
   const fileInputRef = useRef(null);
   const triggerFileSelect = () => fileInputRef.current.click();
+          const axiosApi = useAxios();
+
 
   useEffect(() => {
     if (!user) return;
@@ -66,6 +68,7 @@ const AdminProfile = () => {
     );
 
   const handleNameUpdate = async () => {
+
     try {
       setUserData({ ...userData, name: newName });
       setEditName(false);

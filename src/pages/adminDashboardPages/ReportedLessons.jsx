@@ -1,45 +1,50 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LoadingPage from "../../components/shared/LoadingPage";
 import useDbData from "../../hooks/useDbData";
-import axiosApi from "../../api/axiosInstansce";
+import useAxios from "../../api/useAxios";
 
 const ReportedLessons = () => {
-  const { lessons, reports, loading } = useDbData();
-  const [modalData, setModalData] = useState(null);
+  const { reports, loading } = useDbData();
   const [localReports, setLocalReports] = useState([]);
-  
- 
-  // Update localReports when reports change
-  React.useEffect(() => {
+  const [modalData, setModalData] = useState(null);
+  const axiosApi = useAxios();
+
+  // sync db reports → local state
+  useEffect(() => {
     setLocalReports(reports);
   }, [reports]);
 
   const openModal = (lesson) => setModalData(lesson);
   const closeModal = () => setModalData(null);
 
+  // delete lesson
   const handleDelete = async (lessonId) => {
-    if (!window.confirm("Are you sure you want to delete this lesson?")) return;
+    const ok = window.confirm("Are you sure you want to delete this lesson?");
+    if (!ok) return;
 
     try {
       await axiosApi.delete(`/lessons/${lessonId}`);
-      setLocalReports(localReports.filter((r) => r.lessonId !== lessonId));
-      alert("Lesson deleted successfully!");
+      setLocalReports((prev) =>
+        prev.filter((l) => l.lessonId !== lessonId)
+      );
+      closeModal();
+      alert("Lesson deleted");
     } catch (err) {
       console.error(err);
       alert("Failed to delete lesson");
     }
   };
 
+  // ignore reports
   const handleIgnore = async (lessonId) => {
     try {
       await axiosApi.patch(`/lessonsReports/${lessonId}/ignore`);
-      setLocalReports(
-        localReports.map((r) =>
-          r.lessonId === lessonId ? { ...r, reasons: [], count: 0 } : r
-        )
+      setLocalReports((prev) =>
+        prev.filter((l) => l.lessonId !== lessonId)
       );
-      alert("Reports ignored successfully!");
+      closeModal();
+      alert("Reports ignored");
     } catch (err) {
       console.error(err);
       alert("Failed to ignore reports");
@@ -48,68 +53,62 @@ const ReportedLessons = () => {
 
   if (loading) return <LoadingPage />;
 
-  
-
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen space-y-6">
-      <h1 className="text-3xl font-bold text-center text-gray-800">
-        Reported / Flagged Lessons
+    <div className="max-w-7xl mx-auto p-6 min-h-screen space-y-6">
+      <h1 className="text-3xl font-bold text-center">
+        🚨 Reported / Flagged Lessons
       </h1>
 
       {localReports.length === 0 ? (
-        <div className="text-center py-10 text-gray-500 font-medium">
-          No reported lessons found.
-        </div>
+        <p className="text-center text-gray-500">
+          No reported lessons found
+        </p>
       ) : (
         <div className="overflow-x-auto bg-white shadow rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full divide-y">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  Lesson Title
-                </th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  Reports
-                </th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  Reasons
-                </th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left">Lesson</th>
+                <th className="px-6 py-3 text-center">Reports</th>
+                <th className="px-6 py-3 text-center">Details</th>
+                <th className="px-6 py-3 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+
+            <tbody className="divide-y">
               {localReports.map((lesson) => (
                 <motion.tr
                   key={lesson.lessonId}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
                 >
-                  <td className="px-6 py-4">{lesson.title}</td>
-                  <td className="px-6 py-4 text-center font-semibold text-red-600">
+                  <td className="px-6 py-4 font-medium">
+                    {lesson.lessonTitle}
+                  </td>
+
+                  <td className="px-6 py-4 text-center text-red-600 font-bold">
                     {lesson.count}
                   </td>
+
                   <td className="px-6 py-4 text-center">
                     <button
-                      className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
                       onClick={() => openModal(lesson)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                       View Reasons
                     </button>
                   </td>
+
                   <td className="px-6 py-4 text-center space-x-2">
                     <button
-                      className="px-3 py-1 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors"
                       onClick={() => handleIgnore(lesson.lessonId)}
+                      className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
                     >
                       Ignore
                     </button>
                     <button
-                      className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                       onClick={() => handleDelete(lesson.lessonId)}
+                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
                     >
                       Delete
                     </button>
@@ -121,51 +120,48 @@ const ReportedLessons = () => {
         </div>
       )}
 
-      {/* Modal for reasons */}
+      {/* MODAL */}
       <AnimatePresence>
         {modalData && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white p-6 rounded-2xl w-11/12 md:w-1/2 shadow-lg max-h-[80vh] overflow-y-auto"
+              className="bg-white p-6 rounded-xl w-full max-w-lg"
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0.8 }}
             >
-              <h2 className="text-xl font-bold mb-4">{modalData.title} - Reports</h2>
-              {modalData.reasons.length === 0 ? (
-                <p className="text-gray-500 font-medium">
-                  No reports for this lesson.
-                </p>
+              <h2 className="text-xl font-bold mb-4">
+                {modalData.lessonTitle}
+              </h2>
+
+              {modalData.reasons?.length === 0 ? (
+                <p className="text-gray-500">No reasons found</p>
               ) : (
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                        Reporter
-                      </th>
-                      <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                        Reason
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {modalData.reasons.map((r, idx) => (
-                      <tr key={idx}>
-                        <td className="px-4 py-2">{r.user}</td>
-                        <td className="px-4 py-2">{r.reason}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <ul className="space-y-2">
+                  {modalData.reasons.map((r, idx) => (
+                    <li
+                      key={idx}
+                      className="border p-2 rounded"
+                    >
+                      <p className="text-sm font-medium">
+                        {r.userEmail}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {r.reason}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               )}
+
               <button
-                className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                 onClick={closeModal}
+                className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
               >
                 Close
               </button>

@@ -4,12 +4,14 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { AuthContext } from "../auth/AuthContext";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import axiosApi from "../api/axiosInstansce";
+import useAxios from "../api/useAxios";
 
 const Login = () => {
   const { signInViaGoogle, signInUser } = useContext(AuthContext);
   const [showPass, setShowPass] = useState(false);
-    const [message, setMessage] = useState("");
+  const [message, setMessage] = useState("");
+  const axiosApi = useAxios();
+
   // react hook form
   const {
     register,
@@ -19,39 +21,37 @@ const Login = () => {
   } = useForm();
 
   // google log in
-   const handleGoogle = async () => {
-  try {
-    const result = await signInViaGoogle();
-    const user = result.user;
+  const handleGoogle = async () => {
+    try {
+      const result = await signInViaGoogle();
+      const user = result.user;
 
-    const googleUserData = {
-      userName: user.displayName || "No Name",
-      email: user.email,
-      userImage: user.photoURL,
-      role: "user",
-      plan: "Free",
-      isPremium: false,
-      provider: "google",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      const googleUserData = {
+        userName: user.displayName || "No Name",
+        email: user.email,
+        userImage: user.photoURL,
+        role: "user",
+        plan: "Free",
+        isPremium: false,
+        provider: "google",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
-    const res = await axiosApi.post("/users/google", googleUserData);
+      const res = await axiosApi.post("/users/google", googleUserData);
 
-    console.log("✅ Google user DB response:", res.data);
-    alert("Google login successful!");
-  } catch (error) {
-    console.error("❌ Google login failed:", error.response?.data || error);
-  }
-};
+      console.log("✅ Google user DB response:", res.data);
+      alert("Google login successful!");
+    } catch (error) {
+      console.error("❌ Google login failed:", error.response?.data || error);
+    }
+  };
 
   const handleLogIn = async (data) => {
     try {
       const response = await axiosApi.post("/login", {
         email: data.email,
         password: data.password,
-       
-
       });
 
       setMessage(response.data.message);
@@ -62,7 +62,7 @@ const Login = () => {
       console.error(err.response?.data || err.message);
       setMessage(err.response?.data?.message || "Login failed");
     }
-    signInUser(data.email,data.password)
+    signInUser(data.email, data.password);
   };
 
   return (

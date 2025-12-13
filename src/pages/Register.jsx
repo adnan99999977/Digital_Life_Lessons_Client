@@ -4,11 +4,13 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../auth/AuthContext";
 import { useForm } from "react-hook-form";
-import axiosApi from "../api/axiosInstansce";
 import useImageUpload from "../hooks/useImageUpload";
+import useAxios from "../api/useAxios";
 
 const Register = () => {
   const { imageURL, isUploading, fileName, uploadFile } = useImageUpload();
+      const axiosApi = useAxios();
+
 
   const {
     register,
@@ -29,6 +31,7 @@ const Register = () => {
   };
 
   const handleGoogle = async () => {
+
     try {
       const result = await signInViaGoogle();
       const user = result.user;

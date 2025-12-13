@@ -1,15 +1,41 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { HiOutlineEye, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi";
 import useCurrentUser from "../../hooks/useCurrentUser";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LoadingPage from "../../components/shared/LoadingPage";
 import Swal from "sweetalert2";
-import axiosApi from "../../api/axiosInstansce";
+import useAxios from "../../api/useAxios";
 
 const MyLessons = () => {
+  const axiosApi = useAxios();
   const { user, loading, error, lessons, formatDateTime } = useCurrentUser();
+  const navigate = useNavigate();
 
-  const toggleVisibility = () => {};
+  const toggleVisibility = async (id) => {
+    try {
+      const res = await axiosApi.patch(`/lessons/${id}/toggle-visibility`);
+      if (res.data.modifiedCount > 0) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const toggleAccess = async (id) => {
+    if (!user.isPremium) {
+      navigate("/dashboard/pricing");
+      return;
+    }
+    try {
+      const res = await axiosApi.patch(`/lessons/${id}/toggle-access`);
+      if (res.data.modifiedCount > 0) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Stats
   const stats = {
@@ -151,7 +177,7 @@ const MyLessons = () => {
                 <AnimatePresence>
                   {lessons.map((lesson) => (
                     <motion.tr
-                      key={lesson.id}
+                      key={lesson._id}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -20 }}
@@ -166,7 +192,7 @@ const MyLessons = () => {
                       </td>
                       <td className="px-3 sm:px-4 py-2">
                         <span
-                          onClick={() => toggleAccess(lesson.id)}
+                          onClick={() => toggleAccess(lesson._id)}
                           className={`cursor-pointer px-2 py-1 rounded-full text-white font-semibold text-xs sm:text-sm ${
                             lesson.accessLevel === "Premium"
                               ? "bg-purple-600"
@@ -178,7 +204,7 @@ const MyLessons = () => {
                       </td>
                       <td className="px-3 sm:px-4 py-2">
                         <span
-                          onClick={() => toggleVisibility(lesson.id)}
+                          onClick={() => toggleVisibility(lesson._id)}
                           className={`cursor-pointer px-2 py-1 rounded-full font-semibold text-xs sm:text-sm ${
                             lesson.visibility === "Public"
                               ? "bg-green-600 text-white"
@@ -199,7 +225,7 @@ const MyLessons = () => {
                           {lesson.reviewStatus}
                         </span>
                       </td>
-                     
+
                       <td className="px-3 sm:px-4 py-2 text-xs sm:text-sm">
                         <p>{formatDateTime(lesson.createdAt)}</p>
                       </td>

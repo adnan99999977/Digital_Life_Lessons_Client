@@ -136,7 +136,7 @@ const AdminDashboardHome = () => {
   ];
 
   return (
-    <div className="p-6 bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+    <div className="p-6 min-h-screen">
       {/* Title */}
       <motion.h1
         className="text-3xl md:text-4xl font-bold mb-8 text-indigo-700 text-center"

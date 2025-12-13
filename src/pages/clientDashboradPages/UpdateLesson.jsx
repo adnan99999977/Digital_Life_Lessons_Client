@@ -1,19 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import useAxios from "../../api/useAxios";
 
 const UpdateLesson = () => {
-  // Static / initial data (mock)
+  const { id } = useParams(); // URL theke lesson ID
+  const navigate = useNavigate();
+  const axiosApi = useAxios();
+
   const [lessonData, setLessonData] = useState({
-    title: "My First Life Lesson",
-    description:
-      "This is a detailed description of my first lesson about personal growth.",
-    category: "Personal Growth",
-    emotionalTone: "Motivational",
-    visibility: "Public",
-    accessLevel: "Free",
-    image: null,
+    title: "",
+    description: "",
+    category: "",
+    emotionalTone: "",
+    creatorName: "",
+    creatorEmail: "",
   });
 
-  // Handle form changes
+  const [loading, setLoading] = useState(true);
+
+  // GET lesson by ID from backend
+  useEffect(() => {
+    const fetchLesson = async () => {
+      try {
+        const res = await axiosApi.get(`/lessons/${id}`);
+        setLessonData({
+          ...res.data,
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Failed to fetch lesson data",
+        });
+        setLoading(false);
+      }
+    };
+    fetchLesson();
+  }, [id]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setLessonData((prev) => ({
@@ -22,24 +49,60 @@ const UpdateLesson = () => {
     }));
   };
 
-  const handleImageChange = (e) => {
-    setLessonData((prev) => ({
-      ...prev,
-      image: e.target.files[0],
-    }));
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      // Remove _id if exists
+      const { _id, ...dataToUpdate } = lessonData;
+
+      await axiosApi.patch(`/lessons/${id}`, dataToUpdate);
+
+      Swal.fire({
+        icon: "success",
+        title: "Lesson Updated",
+        text: "Your lesson has been updated successfully!",
+      });
+      navigate("/dashboard/my-lessons");
+    } catch (err) {
+      console.error(err.response?.data || err);
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: "Failed to update lesson",
+      });
+    }
   };
 
-  const handleUpdate = (e) => {
-    e.preventDefault();
-    // Placeholder: Api call diye DB update korte hobe
-    alert("Lesson Updated Successfully (static)");
-    console.log(lessonData);
-  };
+  if (loading) return <p className="text-center mt-10">Loading...</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-6">
       <h1 className="text-2xl font-bold">Update Lesson</h1>
       <form onSubmit={handleUpdate} className="space-y-4">
+        {/* Creator Name */}
+        <div>
+          <label className="block font-semibold mb-1">User Name</label>
+          <input
+            type="text"
+            name="creatorName"
+            value={lessonData.creatorName || ""}
+            disabled
+            className="w-full border p-2 rounded bg-gray-100 cursor-not-allowed"
+          />
+        </div>
+
+        {/* Creator Email */}
+        <div>
+          <label className="block font-semibold mb-1">Email</label>
+          <input
+            type="email"
+            name="creatorEmail"
+            value={lessonData.creatorEmail || ""}
+            disabled
+            className="w-full border p-2 rounded bg-gray-100 cursor-not-allowed"
+          />
+        </div>
+
         {/* Title */}
         <div>
           <label className="block font-semibold mb-1">Lesson Title</label>
@@ -49,6 +112,7 @@ const UpdateLesson = () => {
             value={lessonData.title}
             onChange={handleChange}
             className="w-full border p-2 rounded"
+            required
           />
         </div>
 
@@ -60,6 +124,7 @@ const UpdateLesson = () => {
             value={lessonData.description}
             onChange={handleChange}
             className="w-full border p-2 rounded h-32"
+            required
           />
         </div>
 
@@ -71,6 +136,7 @@ const UpdateLesson = () => {
             value={lessonData.category}
             onChange={handleChange}
             className="w-full border p-2 rounded"
+            required
           >
             <option>Personal Growth</option>
             <option>Career</option>
@@ -88,6 +154,7 @@ const UpdateLesson = () => {
             value={lessonData.emotionalTone}
             onChange={handleChange}
             className="w-full border p-2 rounded"
+            required
           >
             <option>Motivational</option>
             <option>Sad</option>
@@ -96,41 +163,6 @@ const UpdateLesson = () => {
           </select>
         </div>
 
-        {/* Visibility */}
-        <div>
-          <label className="block font-semibold mb-1">Visibility</label>
-          <select
-            name="visibility"
-            value={lessonData.visibility}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option>Public</option>
-            <option>Private</option>
-          </select>
-        </div>
-
-        {/* Access Level */}
-        <div>
-          <label className="block font-semibold mb-1">Access Level</label>
-          <select
-            name="accessLevel"
-            value={lessonData.accessLevel}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-          >
-            <option>Free</option>
-            <option>Premium</option>
-          </select>
-        </div>
-
-        {/* Image Upload */}
-        <div>
-          <label className="block font-semibold mb-1">Upload Image (optional)</label>
-          <input type="file" onChange={handleImageChange} />
-        </div>
-
-        {/* Update Button */}
         <button
           type="submit"
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"

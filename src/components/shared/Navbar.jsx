@@ -3,9 +3,11 @@ import { Link, NavLink } from "react-router-dom";
 import Logo from "../../utils/logo/Logo";
 import Button from "./Button";
 import { AuthContext } from "../../auth/AuthContext";
+import useDbData from "../../hooks/useDbData";
 
 const Navbar = () => {
   const { logOut, user } = useContext(AuthContext);
+  const { dbUser } = useDbData();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -38,7 +40,7 @@ const Navbar = () => {
       { name: "Dashboard", path: "/dashboard" },
     ],
   };
-  const currentRole = user?.role === "admin" ? "admin" : "user";
+  const currentRole =  "user" 
 
   return (
     <div className=" md:w-[1200px] fixed top-2 md:left-7 border border-gray-300 rounded-full bg-transparent backdrop-blur-md z-100 mx-auto  shadow-2xl">
@@ -113,7 +115,7 @@ const Navbar = () => {
             ))}
 
             {roleNavItems[currentRole].map((item) => {
-              if (!user && item.path === "/dashboard") return null; // hide /dashboard if no user
+              if (!dbUser && item.path === "/dashboard") return null; // hide /dashboard if no user
               return (
                 <li key={item.name} className="group">
                   <NavLink
@@ -170,7 +172,7 @@ const Navbar = () => {
                     >
                       Profile
                     </Link>
-                    {user?.role === "admin" ? (
+                    {currentRole === "admin" ? (
                       <Link
                         to="/admin-dashboard"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors rounded-md"

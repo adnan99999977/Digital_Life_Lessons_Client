@@ -4,13 +4,14 @@ import { Trash2, Eye } from "lucide-react";
 import useCurrentUserFav from "../../hooks/useCurrentUserFav";
 import LoadingPage from "../../components/shared/LoadingPage";
 import { Link } from "react-router-dom";
-import axiosApi from "../../api/axiosInstansce";
 import Swal from "sweetalert2";
+import useAxios from "../../api/useAxios";
 
 const MyFavorites = () => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [toneFilter, setToneFilter] = useState("");
   const { favorites, loading, error } = useCurrentUserFav();
+  const axiosApi = useAxios();
   const filteredFavorites = favorites.filter((fav) => {
     return (
       (!categoryFilter || fav.lessonCategory === categoryFilter) &&
@@ -19,6 +20,7 @@ const MyFavorites = () => {
   });
    
   const handleDeleteFav = async (id) => {
+
   const result = await Swal.fire({
     title: "Are you sure?",
     text: "You won't be able to revert this!",
